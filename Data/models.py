@@ -70,3 +70,20 @@ class ChatHistory(models.Model):
         elif self.from_type == "service":
             return f"客服{self.service.name}->用户:{self.user.name}:{self.text}"
 
+
+class MachineLink(models.Model):
+    upper = models.ForeignKey("Machine", on_delete=models.CASCADE, related_name="upper", verbose_name="上位机")
+    lower = models.ForeignKey("Machine", on_delete=models.CASCADE, related_name="lower", verbose_name="下位机")
+    data_item = models.TextField(max_length=24, default="", verbose_name="数据项")
+    condition = models.CharField(max_length=10, default="", verbose_name="触发条件")  # eq\lt\gt
+    condition_num = models.IntegerField(default=0, verbose_name="触发阈值")
+    command = models.CharField(max_length=10, default="", verbose_name="设备命令")
+    command_num = models.IntegerField(default=0, verbose_name="执行幅度")
+
+    class Meta:
+        db_table = "machine_link"
+        verbose_name = "设备联动"
+        verbose_name_plural = "设备联动"
+
+    def __str__(self):
+        return self.upper.machine_name + "->" + self.lower.machine_name

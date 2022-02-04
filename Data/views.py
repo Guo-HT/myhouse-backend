@@ -1,7 +1,8 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from dwebsocket.decorators import accept_websocket
 from Data.models import *
 from UserManagement.models import *
@@ -12,6 +13,8 @@ from common.get_ip import *
 import json
 import time
 import redis
+
+link_count_each_page = 2
 
 
 # Create your views here.
@@ -88,6 +91,7 @@ def status(request):
     return JsonResponse({"state": "ok", "msg": data}, safe=False)
 
 
+@csrf_exempt
 @login_required
 def get_data(request):
     import json
@@ -351,7 +355,8 @@ def get_chat_history(request):
         for each in history:
             user_id = each.user.id
             if user_id not in data.keys():  # 已经有了这个用户的其他记录：
-                data[user_id] = {"head": str(each.user.head_photo), "name": each.user.name, "media_url": settings.MEDIA_URL, "his": []}
+                data[user_id] = {"head": str(each.user.head_photo), "name": each.user.name,
+                                 "media_url": settings.MEDIA_URL, "his": []}
             each_his = dict()
             each_his["time"] = each.time
             each_his["content"] = each.text
@@ -364,6 +369,64 @@ def get_chat_history(request):
             data[user_id]["his"].append(each_his)
         return JsonResponse({"state": "ok", "msg": data}, safe=False)
 
+
+class GetMachineLink(View):
+    @method_decorator(login_required)
+    def post(self, request):
+        upper_machine_id = request.POST.get("upper_machine_id")
+        condition = request.POST.get("condition")
+        data_item = request.POST.get("data_item")
+        condition_num = request.POST.get("condition_num")
+        lower_machine_id = request.POST.get("lower_machine_id")
+        command = request.POST.get("command")
+        command_num = request.POST.get("command_num")
+
+        print(upper_machine_id, condition, data_item, condition_num, lower_machine_id, command, command_num)
+        MachineLink.objects.create(upper_id=upper_machine_id, lower_id=lower_machine_id,
+                                   data_item=data_item, condition=condition, condition_num=condition_num,
+                                   command=command, command_num=command_num)
+        return JsonResponse({"state": "ok", "msg": "msg"}, safe=False)
+
+    @method_decorator(login_required)
+    def get(self, request):
+        from django.core.paginator import Paginator
+
+        page = request.GET.get("page")
+        user_id = request.session['user_id']
+        machine_links = MachineLink.objects.filter(upper__user_belong_id=user_id).order_by("-id")
+
+        paginator = Paginator(machine_links, link_count_each_page)
+        page_num = paginator.num_pages  # 总页数
+        page_list = paginator.page_range  # 页码列表
+
+        try:
+            machine_links_page = paginator.page(page).object_list
+        except Exception as e:
+            return JsonResponse({"state": "fail", "msg": "out of range"}, safe=False, status=500)
+
+        link_list = []
+        for each_link in machine_links_page:
+            each_dict = dict()
+            each_dict["link_id"] = each_link.id
+            each_dict["upper_id"] = each_link.upper.id
+            each_dict["upper_name"] = each_link.upper.machine_name
+            each_dict["lower_id"] = each_link.lower.id
+            each_dict["lower_name"] = each_link.lower.machine_name
+            each_dict["data_item"] = each_link.data_item
+            each_dict["condition"] = each_link.condition
+            each_dict["condition_num"] = each_link.condition_num
+            each_dict["command"] = each_link.command
+            each_dict["command_num"] = each_link.command_num
+            link_list.append(each_dict)
+        return JsonResponse({"state": "ok", "msg": link_list, "page_num": page_num, "total_count": len(machine_links),
+                             "per_page": link_count_each_page}, safe=False)
+
+    @method_decorator(login_required)
+    def delete(self, request):
+        DELETE = QueryDict(request.body)
+        link_id = DELETE.get('link_id')
+        MachineLink.objects.get(id=link_id).delete()
+        return JsonResponse({"state": "ok", "msg": link_id})
 
 # ############## MQTT操作 ##################
 def connect_mqtt_server(client):

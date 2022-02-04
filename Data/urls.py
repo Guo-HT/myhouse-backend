@@ -1,4 +1,6 @@
 from django.urls import path, re_path
+from django.views.decorators.csrf import csrf_exempt
+
 from Data import views
 
 
@@ -12,8 +14,9 @@ urlpatterns = [
     re_path("^mqtt_ctrl", views.mqtt_ctrl, name="mqtt_ctrl"),  # 控制设备
     re_path("^get_command_history", views.get_command_history, name="get_command_history"),  # 获取硬件指令历史
     re_path("^cut_bind", views.cut_bind, name="cut_bind"),  # 解除绑定
-    re_path("^chat_file", views.chat_file, name="chat_file"),  # 聊天发送文件
+    re_path("^chat_file", csrf_exempt(views.chat_file), name="chat_file"),  # 聊天发送文件
     re_path("^get_chat_history", views.get_chat_history, name="get_chat_history"),  # 获取聊天历史
+    re_path("^get_machine_link", views.GetMachineLink.as_view(), name="get_machine_link"),  # 获取聊天历史
 
     re_path("^wstest", views.wstest),  # websocket--即时通信
 ]

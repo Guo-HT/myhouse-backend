@@ -94,6 +94,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'dwebsocket.middleware.WebSocketMiddleware',
+
+    # 自定义中间件
+    # 'middleware.ban_ip.IpBan',
 ]
 
 PASSWORD_HASHERS = (

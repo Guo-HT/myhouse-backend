@@ -50,7 +50,7 @@ class EssayComment(models.Model):
 class EssayCommentReply(models.Model):
     reply = models.TextField(max_length=255, verbose_name="回复")
     from_comment = models.ForeignKey("EssayComment", blank=True, null=True, on_delete=models.CASCADE, verbose_name="回复内容")
-    reply_to = models.ForeignKey("UserManagement.User", blank=True, null=True, on_delete=models.DO_NOTHING, related_name="reply_to", verbose_name="回复谁")
+    reply_to = models.ForeignKey("UserManagement.User", blank=True, null=True, on_delete=models.CASCADE, related_name="reply_to", verbose_name="回复谁")
     user = models.ForeignKey("UserManagement.User", blank=True, null=True, on_delete=models.DO_NOTHING, related_name="reply_from", verbose_name="发表用户")
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="发表时间")
     good_num = models.IntegerField(default=0, verbose_name="点赞量")
