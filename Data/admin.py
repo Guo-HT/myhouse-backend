@@ -55,16 +55,22 @@ class ChatHistoryAdmin(admin.ModelAdmin):
     delete_data.short_description = "删除选中的 聊天记录"
 
 
+class MachineLinkAdmin(admin.ModelAdmin):
+    list_per_page = 20
+    list_display = ["id", "upper", "data_item", "condition", "condition_num", "lower", "command", "command_num"]
+    list_filter = ["data_item"]
+    search_fields = ["id", "upper", "lower", "data_item"]
+    list_display_links = ["id", "upper", "data_item", "condition", "condition_num", "lower", "command", "command_num"]
+
+    def delete_data(self, request, queryset):
+        rows_delete = queryset.delete()
+        self.message_user(request, f"{rows_delete[0]}条数据被删除。")
+
+    delete_data.short_description = "删除选中的 联动关系"
+
+
 admin.site.register(Machine, MachineAdmin)
 admin.site.register(MachineData, MachineDataAdmin)
 admin.site.register(CommandHistory, CommandHistoryAdmin)
 admin.site.register(ChatHistory, ChatHistoryAdmin)
-
-
-"""
-list_per_page = 20
-list_display = []
-list_filter = []
-search_fields = []
-list_display_links = []
-"""
+admin.site.register(MachineLink, MachineLinkAdmin)

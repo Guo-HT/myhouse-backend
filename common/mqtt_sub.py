@@ -60,34 +60,35 @@ def on_message(client, userData, msg):
             machine.save()  # 保存数据
 
             machine_links = MachineLink.objects.filter(upper=machine)
-            mqtt_client = mqtt.Client("django_backend_server_pc_pub", clean_session=False)
-            mqtt_client.on_connect = ctrl_on_connect
-            mqtt_client.on_message = ctrl_on_message
-            mqtt_client.on_disconnect = ctrl_on_disconnect
-            ctrl_connect_mqtt_server(mqtt_client)
-            for each_link in machine_links:
-                lower_machine = each_link.lower
-                condition = each_link.condition
-                condition_num = float(each_link.condition_num)
-                command = each_link.command
-                command_num = each_link.command_num
-                data_item = each_link.data_item
-                if condition == "eq":
-                    if int(payload_json[data_item]) == condition_num:
-                        print("满足条件：", payload_json[data_item], "==", condition_num)
-                        print("需要执行：", lower_machine, command, command_num)
-                        mqtt_client.publish(topic=f"esp8266/{lower_machine.mac_addr}/ctrl", payload=command_num, qos=1, retain=False)
-                if condition == "lt":
-                    if int(payload_json[data_item]) < condition_num:
-                        print("满足条件：",  payload_json[data_item], "<", condition_num)
-                        print("需要执行：", lower_machine, command, command_num)
-                        mqtt_client.publish(topic=f"esp8266/{lower_machine.mac_addr}/ctrl", payload=command_num, qos=1, retain=False)
-                if condition == "gt":
-                    if int(payload_json[data_item]) > condition_num:
-                        print("满足条件：",  payload_json[data_item], ">", condition_num)
-                        print("需要执行：", lower_machine, command, command_num)
-                        mqtt_client.publish(topic=f"esp8266/{lower_machine.mac_addr}/ctrl", payload=command_num, qos=1, retain=False)
-                mqtt_client.disconnect()
+            if not len(machine_links):
+                mqtt_client = mqtt.Client("django_backend_server_pc_pub", clean_session=False)
+                mqtt_client.on_connect = ctrl_on_connect
+                mqtt_client.on_message = ctrl_on_message
+                mqtt_client.on_disconnect = ctrl_on_disconnect
+                ctrl_connect_mqtt_server(mqtt_client)
+                for each_link in machine_links:
+                    lower_machine = each_link.lower
+                    condition = each_link.condition
+                    condition_num = float(each_link.condition_num)
+                    command = each_link.command
+                    command_num = each_link.command_num
+                    data_item = each_link.data_item
+                    if condition == "eq":
+                        if int(payload_json[data_item]) == condition_num:
+                            print("满足条件：", payload_json[data_item], "==", condition_num)
+                            print("需要执行：", lower_machine, command, command_num)
+                            mqtt_client.publish(topic=f"esp8266/{lower_machine.mac_addr}/ctrl", payload=command_num, qos=1, retain=False)
+                    if condition == "lt":
+                        if int(payload_json[data_item]) < condition_num:
+                            print("满足条件：",  payload_json[data_item], "<", condition_num)
+                            print("需要执行：", lower_machine, command, command_num)
+                            mqtt_client.publish(topic=f"esp8266/{lower_machine.mac_addr}/ctrl", payload=command_num, qos=1, retain=False)
+                    if condition == "gt":
+                        if int(payload_json[data_item]) > condition_num:
+                            print("满足条件：",  payload_json[data_item], ">", condition_num)
+                            print("需要执行：", lower_machine, command, command_num)
+                            mqtt_client.publish(topic=f"esp8266/{lower_machine.mac_addr}/ctrl", payload=command_num, qos=1, retain=False)
+                    mqtt_client.disconnect()
         elif machine_func == "will":
             # print("遗嘱功能")
             if payload_json["state"] == "CLIENT-OFFLINE":

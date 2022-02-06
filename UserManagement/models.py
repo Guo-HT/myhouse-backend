@@ -19,8 +19,8 @@ class User(models.Model):
 
     class Meta:
         db_table = "user_info"  # 表名
-        verbose_name = '用户'
-        verbose_name_plural = '用户'
+        verbose_name = '普通用户'
+        verbose_name_plural = '普通用户'
 
     def __str__(self):
         return self.name

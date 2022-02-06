@@ -1,5 +1,5 @@
 from django.http import HttpResponse, JsonResponse, QueryDict
-from django.shortcuts import render
+from django.template.defaultfilters import escape
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -42,7 +42,7 @@ class Machines(View):
                 return JsonResponse({"state": "fail", "msg": "already bind"}, safe=False)
             elif machine.work_type == work_type:
                 machine.user_belong_id = user_id
-                machine.machine_name = machine_name
+                machine.machine_name = escape(machine_name)
                 machine.save()
                 return JsonResponse({"state": "ok", "msg": "ok"}, safe=False)
             else:
@@ -338,7 +338,7 @@ def get_chat_history(request):
         for each in history:
             each_his = dict()
             each_his["time"] = each.time
-            each_his["content"] = each.text
+            each_his["content"] = escape(each.text)
             each_his["content_type"] = each.content_type
             if each.from_type == "user":
                 each_his["type"] = "send"
@@ -359,7 +359,7 @@ def get_chat_history(request):
                                  "media_url": settings.MEDIA_URL, "his": []}
             each_his = dict()
             each_his["time"] = each.time
-            each_his["content"] = each.text
+            each_his["content"] = escape(each.text)
             each_his["content_type"] = each.content_type
 
             if each.from_type == "user":

@@ -1,5 +1,6 @@
 from django.core.mail import send_mail
 from django.http import HttpResponse, JsonResponse
+from django.template.defaultfilters import escape
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
@@ -9,16 +10,15 @@ from UserManagement.models import *
 from common import getLoginInfo
 from common.login_required import *
 from MyHouse import settings
-
 import json
 
 email_body_reg = '''Email 地址验证
 
         尊敬的用户：
 
-            这封信是由 《毕业设计》 发送的。
+            这封信是由 《MyHouse智能家居》 发送的。
 
-            您收到这封邮件，是由于在 《毕业设计》 进行了新用户注册，使用了这个邮箱地址。如果您并没有访问过 《毕业设计》，或没有进行上述操作，请忽略这封邮件。您不需要退订或进行其他进一步的操作。
+            您收到这封邮件，是由于在 《MyHouse智能家居》 进行了新用户注册，使用了这个邮箱地址。如果您并没有访问过 《MyHouse智能家居》，或没有进行上述操作，请忽略这封邮件。您不需要退订或进行其他进一步的操作。
 
             注册验证码：  {verify_code}
 
@@ -32,9 +32,9 @@ email_body_change = '''Email 地址验证
 
         尊敬的用户：
 
-            这封信是由 《毕业设计》 发送的。
+            这封信是由 《MyHouse智能家居》 发送的。
 
-            您收到这封邮件，是由于在 《毕业设计》 进行了新用户注册，使用了这个邮箱地址。如果您并没有访问过 《毕业设计》，或没有进行上述操作，请忽略这封邮件。您不需要退订或进行其他进一步的操作。
+            您收到这封邮件，是由于在 《MyHouse智能家居》 进行了密码找回，使用了这个邮箱地址。如果您并没有访问过 《MyHouse智能家居》，或没有进行上述操作，请忽略这封邮件。您不需要退订或进行其他进一步的操作。
 
             修改密码验证码：  {verify_code}
 

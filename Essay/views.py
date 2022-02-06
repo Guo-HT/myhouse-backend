@@ -1,4 +1,5 @@
 from django.http import JsonResponse, Http404
+from django.template.defaultfilters import escape
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -82,7 +83,7 @@ class EssayDetail(View):
             essay.save()
             comment_num = len(EssayComment.objects.filter(from_essay_id=essay_id))
             data = {
-                "title": title,
+                "title": escape(title),
                 "content": content,
                 "user": user,
                 "create_time": create_time,
@@ -144,8 +145,8 @@ def get_list(request):
         for each in recent_five:
             each_data = dict()
             each_data["id"] = each.id
-            each_data["title"] = each.title
-            each_data["content"] = reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50]
+            each_data["title"] = escape(each.title)
+            each_data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
             each_data["user"] = each.user.name
             each_data["create_time"] = each.create_time.strftime('%Y-%m-%d %H:%M:%S')
             each_data["watch_num"] = each.watch_num
@@ -159,8 +160,8 @@ def get_list(request):
         for each in recent_five:
             each_data = dict()
             each_data["id"] = each.id
-            each_data["title"] = each.title
-            each_data["content"] = reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50]
+            each_data["title"] = escape(each.title)
+            each_data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
             each_data["user"] = each.user.name
             each_data["create_time"] = each.create_time.strftime('%Y-%m-%d %H:%M:%S')
             each_data["watch_num"] = each.watch_num
@@ -182,7 +183,7 @@ def get_list(request):
             each_data = dict()
             each_data["id"] = each.id
             each_data["title"] = each.title
-            each_data["content"] = reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50]
+            each_data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
             each_data["user"] = each.user.name
             each_data["create_time"] = each.create_time.strftime('%Y-%m-%d %H:%M:%S')
             each_data["watch_num"] = each.watch_num
@@ -214,8 +215,8 @@ def get_list(request):
             for each in essay_list_page:
                 each_data = dict()
                 each_data["id"] = each.id
-                each_data["title"] = each.title
-                each_data["content"] = reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50]
+                each_data["title"] = escape(each.title)
+                each_data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
                 each_data["user"] = each.user.name
                 each_data["create_time"] = each.create_time.strftime('%Y-%m-%d %H:%M:%S')
                 each_data["watch_num"] = each.watch_num
@@ -292,7 +293,7 @@ class Comment(View):
         essay_id = request.POST.get("for")
         user = User.objects.get(id=user_id)
         comment = EssayComment()
-        comment.comment = comment_content
+        comment.comment = escape(comment_content)
         comment.user = user
         comment.from_essay_id = essay_id
         comment.save()
@@ -328,7 +329,7 @@ class Comment(View):
             data["head_path"] = str(comment.user.head_photo)
             data["time"] = comment.create_time.strftime("%Y-%m-%d %H:%M:%S")
             data["good_num"] = comment.good_num
-            data["comment"] = comment.comment
+            data["comment"] = escape(comment.comment)
             data["upload_file"] = settings.MEDIA_URL
             data["comment_id"] = comment.id
 
@@ -343,7 +344,7 @@ class Comment(View):
                 replay_data["head_path"] = str(reply.user.head_photo)
                 replay_data["time"] = datetime.datetime.strftime(reply.create_time, "%Y-%m-%d %H:%M:%S")
                 replay_data["good_num"] = reply.good_num
-                replay_data["comment"] = reply.reply
+                replay_data["comment"] = escape(reply.reply)
                 replay_data["comment_id"] = reply.id
                 reply_list.append(replay_data)
             data["reply"] = reply_list
@@ -355,6 +356,7 @@ class Comment(View):
 class Reply(View):
     @method_decorator(login_required)
     def post(self, request):
+        """获取评论回复"""
         import datetime
         user_name = request.session["user_name"]
         user_id = request.session["user_id"]
@@ -373,7 +375,7 @@ class Reply(View):
         else:
             return JsonResponse({}, status=500)
 
-        reply = EssayCommentReply.objects.create(reply=reply_content, from_comment=comment, user_id=user_id,
+        reply = EssayCommentReply.objects.create(reply=escape(reply_content), from_comment=comment, user_id=user_id,
                                                  reply_to=reply_to_user)
         cur_user = User.objects.get(id=user_id)
         data = {
@@ -394,6 +396,7 @@ class Reply(View):
 
 @login_required
 def comment_reply_good(request):
+    """评论回复的点赞"""
     comment_type = request.POST.get("comment_type")
     comment_id = request.POST.get("comment_id")
 
@@ -438,9 +441,9 @@ def get_per_info_list(request):
     reg = re.compile('<[^>]*>')
     for each in collect_page:
         data = dict()
-        data["title"] = each.essay.title
+        data["title"] = escape(each.essay.title)
         data["id"] = each.essay.id
-        data["content"] = reg.sub('', each.essay.content).replace('\n', '').replace(' ', '')[0:50]
+        data["content"] = escape(reg.sub('', each.essay.content).replace('\n', '').replace(' ', '')[0:50])
         data_list.append(data)
     # print(data_list)
     return JsonResponse(
