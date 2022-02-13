@@ -287,8 +287,16 @@ class Comment(View):
     @method_decorator(login_required)
     def post(self, request):
         """发表评论"""
+        import datetime
         user_id = request.session["user_id"]
         user_name = request.session["user_name"]
+        history = EssayComment.objects.filter(user_id=user_id).order_by("-create_time")
+        if len(history):
+            time_delta = datetime.datetime.now() - history[0].create_time
+            if time_delta.seconds < 60:
+                # 频率控制
+                return JsonResponse({"state": "fail", "msg": "wait"}, status=403, safe=False)
+
         comment_content = request.POST.get("content")
         essay_id = request.POST.get("for")
         user = User.objects.get(id=user_id)
@@ -360,6 +368,12 @@ class Reply(View):
         import datetime
         user_name = request.session["user_name"]
         user_id = request.session["user_id"]
+        history = EssayCommentReply.objects.filter(user_id=user_id).order_by("-create_time")
+        if len(history):
+            time_delta = datetime.datetime.now() - history[0].create_time
+            if time_delta.seconds < 60:
+                # 频率控制
+                return JsonResponse({"state": "fail", "msg": "wait"}, status=403, safe=False)
         reply_content = request.POST.get("reply_content")
         root_id = request.POST.get("root_id")
         reply_id = request.POST.get("reply_id")
