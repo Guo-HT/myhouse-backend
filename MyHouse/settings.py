@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import pymysql
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'g)b=1h!@5tl0ar()@3#crta6@5zmz0*@q$59hwra&z_6+fd%vb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False # True
 
 ALLOWED_HOSTS = ['*', ]
 
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     # 插件
     'corsheaders',  # 解决跨域
     # 'dwebsocket',   # 即时通信，直接使用，不需要安装
+    'gunicorn',  # gunicorn服务器
     'ckeditor',     # 后台,富文本
     'ckeditor_uploader',  # 后台,富文本上传
     # 自定义
@@ -54,7 +57,7 @@ INSTALLED_APPS = [
 # 设置跨域可用
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = ('http://127.0.0.1:*', )
+CORS_ORIGIN_WHITELIST = ('http://guohtgo.asuscomm.com:*', )
 
 SESSION_COOKIE_SAMESITE = None  # response header set-cookie:samesite=lax  Default: 'Lax'
 CSRF_COOKIE_SAMESITE = None
@@ -81,7 +84,6 @@ CORS_ALLOW_HEADERS = (
     'x-csrftoken',
     'x-requested-with',
     'Pragma',
-    "X-CSRFToken",
 )
 
 MIDDLEWARE = [
@@ -94,9 +96,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'dwebsocket.middleware.WebSocketMiddleware',
-
-    # 自定义中间件
-    # 'middleware.ban_ip.IpBan',
 ]
 
 PASSWORD_HASHERS = (
@@ -135,15 +134,12 @@ WSGI_APPLICATION = 'MyHouse.wsgi.application'
 
 DATABASES = {
     'default': {
-        'NAME': 'MyHouse',
-        'ENGINE': 'sql_server.pyodbc',
-        'HOST': '127.0.0.1',
-        'PORT': '1433',
-        'USER': 'sa',
-        'PASSWORD': '123456',
-        'OPTIONS': {
-            'driver': 'SQL Server Native Client 11.0',
-        }
+        'ENGINE': 'django.db.backends.mysql', #设置为mysql数据库
+        'NAME': 'MyHousePi',  #mysql数据库名
+        'USER': 'root',  #mysql用户名
+        'PASSWORD': '123456',   #mysql密码
+        'HOST': '',  #留空默认为localhost
+        'PORT': '',  #留空默认为3306端口
     }
 }
 
@@ -202,7 +198,7 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/upload_files/'  # 你的media url 在Url显示并没什么关系
 
-MEDIA_ROOT = r"e:/a_project_data/MyHouse/UpLoad/"
+MEDIA_ROOT = r"/home/pi/Code/Django_proj/MyHouse_Backend/UpLoadFiles/"
 
 # ckeditor配置
 CKEDITOR_JQUERY_URL = 'https://cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js'
@@ -231,7 +227,7 @@ PHOTO_SIZE = 3*1024*1024
 PHOTO_TYPE = ["png", "jpg", "gif"]
 
 # 后端域
-BACKEND_SITE = "http://127.0.0.1:8000"
+BACKEND_SITE = "http://guohtgo.asuscomm.com:8003"
 # BACKEND_SITE = "http://u389m52694.wicp.vip:52017/"
 
 # MQTT服务器相关

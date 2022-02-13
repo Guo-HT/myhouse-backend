@@ -17,6 +17,7 @@ urlpatterns = [
     re_path("^chat_file", csrf_exempt(views.chat_file), name="chat_file"),  # 聊天发送文件
     re_path("^get_chat_history", views.get_chat_history, name="get_chat_history"),  # 获取聊天历史
     re_path("^get_machine_link", views.GetMachineLink.as_view(), name="get_machine_link"),  # 获取聊天历史
-
+    re_path("^server_status_data", views.server_status_data, name="server_status_data"),
+    re_path("^server_status_info", views.server_status_info, name="server_status_info"),
     re_path("^wstest", views.wstest),  # websocket--即时通信
 ]

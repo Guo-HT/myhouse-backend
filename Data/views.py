@@ -286,8 +286,8 @@ def wstest(request):
                 finally:
                     if user_type == 'user':  # 当前是用户
                         recv = conn_from_service.keys("*")  # 提取库中所有键值对
-                        print("用户:", online_user)
-                        print(recv)
+                        # print("用户:", online_user)
+                        # print("消息:", recv)
                         for obj_name in recv:  # 便利
                             obj = conn_from_service.hgetall(obj_name)
                             if obj[b"to"].decode() == str(user_id):
@@ -301,8 +301,8 @@ def wstest(request):
                                 conn_from_service.delete(obj_name)
                     elif user_type == "service":  # 当前是客服
                         recv = conn_from_user.keys("*")  # 提取库中所有键值对
-                        print("客服:", online_service)
-                        print(recv)
+                        # print("客服:", online_service)
+                        # print("消息:", recv)
                         for obj_name in recv:  # 便利
                             obj = conn_from_user.hgetall(obj_name)
                             if obj[b"to"].decode() == str(user_id):
@@ -427,6 +427,109 @@ class GetMachineLink(View):
         link_id = DELETE.get('link_id')
         MachineLink.objects.get(id=link_id).delete()
         return JsonResponse({"state": "ok", "msg": link_id})
+
+
+def server_status_data(request):
+    import psutil
+    import platform
+    import time
+
+    cpu_percent = psutil.cpu_percent(interval=1)
+    cpus_percent = psutil.cpu_percent(percpu=True, interval=1)
+    cpu_times = psutil.cpu_times_percent(percpu=False)
+    uname = platform.uname()
+    with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+        temp = f.readline()
+        temp = temp[0:len(temp)-1]
+    cpu = {
+        "temp": int(temp)/1000,
+        "cpu_percent": cpu_percent,
+        "core": len(cpus_percent),
+        "cpus_percent": cpus_percent,
+        "cpu_freq": psutil.cpu_freq().current,
+        "user": cpu_times.user,
+        "nice": cpu_times.nice,
+        "system": cpu_times.system,
+        "idle": cpu_times.idle,
+        "iowait": cpu_times.iowait,
+        "irq": cpu_times.irq,
+        "softirq": cpu_times.softirq,
+        "platform": uname.system + " " + uname.node + " " +uname.release + " "+uname.version + " " + uname.machine
+    }
+    # print(cpu)
+    mem_info = psutil.virtual_memory()
+    mem_cache_info = psutil.swap_memory()
+    mem = {
+        "mem_percent": mem_info.percent,
+        "used": mem_info.used,
+        "cached": mem_info.cached,
+        "buffers": mem_info.buffers,
+        "free": mem_info.free,
+        "swap_percent": mem_cache_info.percent,
+        "swap_total": mem_cache_info.total,
+        "swap_used": mem_cache_info.used,
+        "total": mem_info.total,
+        "running": len(psutil.pids()),
+    }
+    # print(mem)
+    disk_info = psutil.disk_usage("/")
+    dict = {
+        "used": disk_info.used,
+        "total": disk_info.total,
+        "free": disk_info.free,
+        "percent": disk_info.percent,
+    }
+    # print(dict)
+    bytes_sent=0
+    bytes_recv=0
+    for i in range(2):
+        net_info = psutil.net_io_counters(pernic=False)
+        bytes_sent = net_info.bytes_sent - bytes_sent
+        bytes_recv = net_info.bytes_recv - bytes_recv
+        time.sleep(0.5)
+    net = {
+        "sent": bytes_sent*2,
+        "recv": bytes_recv*2,
+    }
+    # print(net)
+    data = {
+        "cpu": cpu,
+        "mem": mem,
+        "dict": dict,
+        "net": net,
+    }
+    return JsonResponse({"state":"ok", "msg":data}, safe=False)
+
+
+def server_status_info(request):
+    import psutil
+    import requests
+    import re
+    import datetime
+    import getpass
+    import platform
+
+    net = psutil.net_if_addrs()
+    inner_ip = net["eth0"][0].address  # 获取内网ip
+
+    headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.43",}
+    response = requests.get("http://ip.tool.lu", headers=headers)  # 获取公网ip
+    outer_ip_text = response.content.decode()
+    result = re.match(r".+?([\d]{1,3}.[\d]{1,3}.[\d]{1,3}.[\d]{1,3})", outer_ip_text)  # 正则解析
+    outer_ip = result.group(1)
+    # print(outer_ip)
+    # print(inner_ip)
+    info = {
+        "inner_ip": inner_ip,
+        "outer_ip": outer_ip,
+        "open_time": datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"),
+        "user_name": getpass.getuser(),
+        "node_name": platform.node(),
+        "system": platform.system(),
+        "machine": platform.machine(),
+    }
+    return JsonResponse({"state":"ok", "msg":info}, safe=False)
+
 
 # ############## MQTT操作 ##################
 def connect_mqtt_server(client):

@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /data/
+Disallow: /user/
+Disallow: /essay/
+Disallow: /ckeditor/
+Disallow: /static/
+Disallow: /upload_files/
