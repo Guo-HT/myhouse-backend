@@ -16,6 +16,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MyHouse.settings')
 application = get_wsgi_application()
 
 # 开启mqtt监听
-import mqtt_sub
+# import mqtt_sub
 
-mqtt_sub.connect_mqtt_server()
+# mqtt_sub.connect_mqtt_server()

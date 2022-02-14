@@ -60,7 +60,7 @@ def on_message(client, userData, msg):
             machine.save()  # 保存数据
 
             machine_links = MachineLink.objects.filter(upper=machine)
-            if not len(machine_links):
+            if len(machine_links):
                 mqtt_client = mqtt.Client("django_backend_server_pc_pub", clean_session=False)
                 mqtt_client.on_connect = ctrl_on_connect
                 mqtt_client.on_message = ctrl_on_message
@@ -73,6 +73,7 @@ def on_message(client, userData, msg):
                     command = each_link.command
                     command_num = each_link.command_num
                     data_item = each_link.data_item
+                    # print(lower_machine,condition,condition_num,command,command_num,data_item)
                     if condition == "eq":
                         if int(payload_json[data_item]) == condition_num:
                             print("满足条件：", payload_json[data_item], "==", condition_num)

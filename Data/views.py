@@ -421,12 +421,12 @@ class GetMachineLink(View):
         return JsonResponse({"state": "ok", "msg": link_list, "page_num": page_num, "total_count": len(machine_links),
                              "per_page": link_count_each_page}, safe=False)
 
-    @method_decorator(login_required)
-    def delete(self, request):
-        DELETE = QueryDict(request.body)
-        link_id = DELETE.get('link_id')
-        MachineLink.objects.get(id=link_id).delete()
-        return JsonResponse({"state": "ok", "msg": link_id})
+@login_required
+def machine_link_delete(request):
+    link_id = request.POST.get('link_id')
+    print(link_id)
+    MachineLink.objects.get(id=link_id).delete()
+    return JsonResponse({"state": "ok", "msg": link_id})
 
 
 def server_status_data(request):
