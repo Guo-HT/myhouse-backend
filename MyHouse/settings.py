@@ -11,8 +11,11 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import pymysql
-pymysql.install_as_MySQLdb()
+# import pymysql
+# pymysql.version_info = (1, 3, 13, "final", 0)  # 解决mysql版本问题报错而添加的代码
+# pymysql.install_as_MySQLdb()
+import MySQLdb
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,6 +51,7 @@ INSTALLED_APPS = [
     'gunicorn',  # gunicorn服务器
     'ckeditor',     # 后台,富文本
     'ckeditor_uploader',  # 后台,富文本上传
+    'silk',  # 性能监测
     # 自定义
     'UserManagement',  # 用户管理
     'Data',  # 数据管理
@@ -96,6 +100,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'dwebsocket.middleware.WebSocketMiddleware',
+    'silk.middleware.SilkyMiddleware',  # 性能监测
 ]
 
 PASSWORD_HASHERS = (
@@ -213,6 +218,9 @@ CKEDITOR_CONFIGS = {
 # 他的目录相对与media root 就是 media root + CKEDITOR_UPLOAD_PATH 不能写成"/uploads/"
 CKEDITOR_UPLOAD_PATH = "admin/ckeditor/"
 CKEDITOR_IMAGE_BACKEND = 'pillow'
+
+# silk 性能监测
+SILKY_PYTHON_PROFILER = True
 
 # 邮件配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

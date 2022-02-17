@@ -31,6 +31,7 @@ urlpatterns = [
     re_path(r'^ckeditor/', include('ckeditor_uploader.urls')),
     url(r'^favicon\.ico', RedirectView.as_view(url=r'/static/img/favicon.ico')),
     url(r'^robots\.txt', RedirectView.as_view(url=r'/static/robots.txt')),
+    url(r'^silk/', include('silk.urls', namespace='silk')),  # 性能监测
 ]
 
 if settings.DEBUG is False:

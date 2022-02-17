@@ -21,7 +21,7 @@ import re
 
 # 建立链接后的回调
 def on_connect(client, userData, flags, rc):
-    print("MQTT connected with result code " + str(rc))
+    # print("MQTT connected with result code " + str(rc))
     client.subscribe(topic="esp8266/+/state")
     client.subscribe(topic="esp8266/+/will")
 
@@ -34,7 +34,7 @@ def on_message(client, userData, msg):
     machine_func = ret.group(2)  # topic中获取的主题功能：will->上下线, state->状态, ctrl->控制
     payload = msg.payload.decode()
     payload_json = json.loads(payload)
-    print(msg.topic, machine_mac, machine_func, payload_json)
+    # print(msg.topic, machine_mac, machine_func, payload_json)
     try:
         machine = Machine.objects.get(mac_addr=machine_mac)  # 查看是否存储该设备
     except Exception as e:
@@ -105,8 +105,8 @@ def on_message(client, userData, msg):
 
 # 订阅成功后的回调
 def on_subscribe(client, userData, mid, QoS):
-    print(mid, QoS)
-
+    # print(mid, QoS)
+    pass
 
 # # 链接失败后的回调
 # def on_connect_fail(client, userData):
@@ -124,14 +124,14 @@ client = mqtt.Client(client_id="django_backend_server_rpi_sub", clean_session=Fa
 # 链接mqtt服务器
 def connect_mqtt_server():
     global client
-    print("正在连接 MQTT Mosquitto 服务器")
+    # print("正在连接 MQTT Mosquitto 服务器")
     client.on_connect = on_connect  # 链接成功的回调
     client.on_message = on_message  # 收到消息的回调
     client.on_subscribe = on_subscribe  # 订阅成功的回调
     # client.on_connect_fail = on_connect_fail  # 链接失败的回调
     client.username_pw_set(settings.MQTT_USERNAME, settings.MQTT_PASSWORD)  # 用户名、密码
     client.connect(settings.MQTT_SERVER_HOST, settings.MQTT_SERVER_PORT, 60)  # 建立链接
-    print("连接成功")
+    # print("连接成功")
     mqtt_thread = threading.Thread(target=mqtt_function)
     mqtt_thread.start()
 
