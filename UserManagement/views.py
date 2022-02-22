@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template.defaultfilters import escape
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from silk.profiling.profiler import silk_profile
 from django.db.models import Q
 from django.views import View
 from django.contrib.auth.hashers import check_password
@@ -52,6 +53,7 @@ def test(request):
 
 # 用户注册
 class Reg(View):
+    @silk_profile(name="用户注册")
     def post(self, request):
         """用户注册，需要的数据：用户名，密码，邮箱，验证码，头像"""
         from datetime import datetime, timedelta
@@ -76,6 +78,7 @@ class Reg(View):
         else:
             return JsonResponse({"state": 'fail', "msg": "user has existed"}, safe=False)
 
+    @silk_profile(name="用户注册获取验证码")
     def get(self, request):
         """发送验证码，进行邮箱验证"""
         global email_body_reg
@@ -107,6 +110,7 @@ class Reg(View):
             print('邮箱被使用，退回！')
             return JsonResponse({"state": "fail", "msg": "email exist"})
 
+    @silk_profile(name="用户注销")
     @method_decorator(login_required)
     def delete(self, request):
         """用户注销"""
@@ -124,6 +128,7 @@ class Reg(View):
         except Exception as e:
             return JsonResponse({"state": "fail", "msg": "error"}, safe=False)
 
+    @silk_profile(name="用户信息修改")
     @method_decorator(login_required)
     def put(self, request):
         """信息修改"""
@@ -132,6 +137,7 @@ class Reg(View):
 
 # 用户登录
 class Log(View):
+    @silk_profile(name="用户登录")
     def post(self, request):
         """用户登录"""
         name = request.POST.get("name")
@@ -163,6 +169,7 @@ class Log(View):
                 print(e)
                 return JsonResponse({"state": "fail", "msg": "password error"}, safe=False)
 
+    @silk_profile(name="用户退出登录")
     def get(self, request):
         """用户登出"""
         request.session.clear()  # .flush()
@@ -175,6 +182,7 @@ class Log(View):
 
 # 修改密码
 class ChgPwd(View):
+    @silk_profile(name="用户修改密码")
     def post(self, request):
         from datetime import datetime, timedelta
         """修改密码"""
@@ -204,6 +212,7 @@ class ChgPwd(View):
             else:
                 return JsonResponse({"state": "fail", "msg": "not verified"}, safe=False)
 
+    @silk_profile(name="用户修改密码邮箱验证")
     def get(self, request):
         """邮箱验证"""
         global email_body_change
@@ -236,6 +245,7 @@ class ChgPwd(View):
             return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False)
 
 
+@silk_profile(name="用户头像上传")
 @login_required
 def add_photo(request):
     """用户上传头像"""
@@ -261,6 +271,7 @@ def add_photo(request):
 
 
 # 获取用户状态
+@silk_profile(name="获取用户在线状态")
 def user_status(request):
     user_info = getLoginInfo.get_login_info(request)
     user_info["media_url"] = settings.MEDIA_URL
@@ -304,6 +315,7 @@ def save_file(file_object, file_path):
 
 
 # 获取用户信息
+@silk_profile(name="获取用户信息")
 @login_required
 def get_info(request):
     user_id = request.session["user_id"]
@@ -321,6 +333,7 @@ def get_info(request):
 
 # 客服登录
 class ServiceLog(View):
+    @silk_profile(name="客服登录")
     @csrf_exempt
     def post(self, request):
         """客服登录"""
@@ -354,6 +367,7 @@ class ServiceLog(View):
                 print(e)
                 return JsonResponse({"state": "fail", "msg": "password error"}, safe=False)
 
+    @silk_profile(name="客服登出")
     def get(self, request):
         """客服登出"""
         request.session.clear()  # .flush()

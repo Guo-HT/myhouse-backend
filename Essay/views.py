@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.contrib.auth.hashers import check_password
 from django.views.decorators.csrf import csrf_exempt
-
+from silk.profiling.profiler import silk_profile
 from Essay.models import *
 from MyHouse import settings
 from common.login_required import *
@@ -26,6 +26,7 @@ def test(request):
 
 
 class EssayDetail(View):
+    @silk_profile(name="文章上传")
     @method_decorator(login_required)  # 类视图装饰器
     def post(self, request):
         """上传文章"""
@@ -38,6 +39,7 @@ class EssayDetail(View):
         Essay.objects.create(title=title, content=content, user=user)
         return JsonResponse({"state": "ok", "msg": "get"}, safe=False)
 
+    @silk_profile(name="获取某篇文章")
     def get(self, request):
         """获取某篇文章"""
         essay_id = request.GET.get("id")
@@ -97,6 +99,7 @@ class EssayDetail(View):
 
 # 接受富文本编辑器的图片
 @csrf_exempt
+@silk_profile(name="富文本异步上传")
 @login_required
 def richtext_upload(request):
     import time
@@ -130,6 +133,7 @@ def richtext_upload(request):
 
 
 # 获取主页、详情页（热门、近期）的推荐列表
+@silk_profile(name="获取文章列表")
 def get_list(request):
     import re
     from django.core.paginator import Paginator
@@ -227,6 +231,7 @@ def get_list(request):
 
 
 # 文章点赞
+@silk_profile(name="文章点赞")
 @login_required
 def do_good(request):
     """文章点赞"""
@@ -253,6 +258,7 @@ def do_good(request):
 
 
 # 文章收藏
+@silk_profile(name="文章收藏")
 @login_required
 def do_collect(request):
     """文章收藏"""
@@ -284,6 +290,7 @@ def do_collect(request):
 
 
 class Comment(View):
+    @silk_profile(name="发表评论")
     @method_decorator(login_required)
     def post(self, request):
         """发表评论"""
@@ -316,6 +323,7 @@ class Comment(View):
         data["comment_id"] = comment.id
         return JsonResponse({"state": "ok", 'msg': data}, safe=False)
 
+    @silk_profile(name="获取所有评论及回复")
     def get(self, request):
         """获取所有评论及回复"""
         import datetime
@@ -362,9 +370,10 @@ class Comment(View):
 
 
 class Reply(View):
+    @silk_profile(name="评论回复")
     @method_decorator(login_required)
     def post(self, request):
-        """获取评论回复"""
+        """评论回复"""
         import datetime
         user_name = request.session["user_name"]
         user_id = request.session["user_id"]
@@ -408,6 +417,7 @@ class Reply(View):
         return JsonResponse(data, safe=False)
 
 
+@silk_profile(name="评论、回复点赞")
 @login_required
 def comment_reply_good(request):
     """评论回复的点赞"""
@@ -427,6 +437,7 @@ def comment_reply_good(request):
     return JsonResponse({"state": "ok", "msg": {"good_num": comment.good_num}}, safe=False)
 
 
+@silk_profile(name="获取社区个人信息")
 @login_required
 def get_per_info_list(request):
     from django.core.paginator import Paginator

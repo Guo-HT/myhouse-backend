@@ -221,6 +221,11 @@ CKEDITOR_IMAGE_BACKEND = 'pillow'
 
 # silk 性能监测
 SILKY_PYTHON_PROFILER = True
+# 生成.prof文件，silk产生的程序跟踪记录，详细记录来执行来哪个文件，哪一行，用了多少时间等信息
+SILKY_PYTHON_PROFILER_BINARY = True
+# .prof文件保存路径（最好不要像我这样设置在项目目录中）
+# 如果没有本设置，prof文件将默认保存在MEDIA_ROOT里
+SILKY_PYTHON_PROFILER_RESULT_PATH = os.path.join(BASE_DIR, 'SilkProf')
 
 # 邮件配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

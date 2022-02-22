@@ -1,6 +1,7 @@
 from django.http import HttpResponse, JsonResponse, QueryDict
 from django.template.defaultfilters import escape
 from django.utils.decorators import method_decorator
+from silk.profiling.profiler import silk_profile
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from dwebsocket.decorators import accept_websocket
@@ -23,6 +24,7 @@ def test(request):
 
 
 class Machines(View):
+    @silk_profile(name="设备绑定")
     @method_decorator(login_required)
     def post(self, request):
         """绑定设备"""
@@ -50,6 +52,7 @@ class Machines(View):
         except Exception as e:
             return JsonResponse({"state": "fail", "msg": "machine not exist"}, safe=False)
 
+    @silk_profile(name="获取设备绑定列表")
     @method_decorator(login_required)
     def get(self, request):
         user_id = request.session["user_id"]
@@ -68,6 +71,7 @@ class Machines(View):
         return JsonResponse({"state": "ok", "msg": data_list}, safe=False)
 
 
+@silk_profile(name="解除绑定")
 @login_required
 def cut_bind(request):
     machine_id = request.POST.get("id")
@@ -81,6 +85,7 @@ def cut_bind(request):
         return JsonResponse({"state": "ok", "msg": "ok"}, safe=False)
 
 
+@silk_profile(name="用户获取所有设备状态")
 @login_required
 def status(request):
     user_id = request.session["user_id"]
@@ -92,6 +97,7 @@ def status(request):
 
 
 @csrf_exempt
+@silk_profile(name="获取设备数据")
 @login_required
 def get_data(request):
     import json
@@ -109,6 +115,7 @@ def get_data(request):
     return JsonResponse({"state": "ok", "msg": data_list}, safe=False)
 
 
+@silk_profile(name="获取所有设备状态")
 @login_required
 def get_machines_data(request):
     import json
@@ -129,6 +136,7 @@ def get_machines_data(request):
     return JsonResponse({"state": "ok", "msg": data_list}, safe=False)
 
 
+@silk_profile(name="获取设备指令历史")
 @login_required
 def get_command_history(request):
     machine_type = request.GET.get("type")
@@ -141,6 +149,7 @@ def get_command_history(request):
 
 
 # 给设备发送指令
+@silk_profile(name="发送设备指令")
 @login_required
 def mqtt_ctrl(request):
     command = request.POST.get("command")
@@ -169,6 +178,7 @@ redis_pool_from_user = redis.ConnectionPool(host="127.0.0.1", port="6379", db=4,
 redis_pool_from_service = redis.ConnectionPool(host="127.0.0.1", port="6379", db=5, decode_responses=False)
 
 
+@silk_profile(name="即时通信发送文件")
 @login_required
 def chat_file(request):
     import time
@@ -187,8 +197,8 @@ def chat_file(request):
     file_name = f"{file_time}_{file.name}"
     file_path = settings.MEDIA_ROOT + "chat_file/" + file_name
     file_url = f"{settings.MEDIA_URL}chat_file/{file_name}"
-    print(file_path)
-    print(file_url)
+    # print(file_path)
+    # print(file_url)
     try:
         with open(file_path, "wb+") as f:
             for chunk in file.chunks():
@@ -219,8 +229,8 @@ def chat_file(request):
         msg_send["file_name"] = file_name
         return JsonResponse({"state": "ok", "msg": msg_send}, safe=False)
     except Exception as e:
-        print(e)
-        print(e.__traceback__.tb_lineno)
+        # print(e)
+        # print(e.__traceback__.tb_lineno)
         return JsonResponse({"state": "fail", "msg": "fail"}, safe=False)
 
 
@@ -327,6 +337,7 @@ def wstest(request):
             print("关闭连接")
 
 
+@silk_profile(name="获取聊天历史")
 @login_required
 def get_chat_history(request):
     user_id = request.session["user_id"]
@@ -371,6 +382,7 @@ def get_chat_history(request):
 
 
 class GetMachineLink(View):
+    @silk_profile(name="设置设备联动")
     @method_decorator(login_required)
     def post(self, request):
         upper_machine_id = request.POST.get("upper_machine_id")
@@ -387,6 +399,7 @@ class GetMachineLink(View):
                                    command=command, command_num=command_num)
         return JsonResponse({"state": "ok", "msg": "msg"}, safe=False)
 
+    @silk_profile(name="获取设备联动列表")
     @method_decorator(login_required)
     def get(self, request):
         from django.core.paginator import Paginator
@@ -421,6 +434,7 @@ class GetMachineLink(View):
         return JsonResponse({"state": "ok", "msg": link_list, "page_num": page_num, "total_count": len(machine_links),
                              "per_page": link_count_each_page}, safe=False)
 
+@silk_profile(name="解除设备联动")
 @login_required
 def machine_link_delete(request):
     link_id = request.POST.get('link_id')
@@ -429,6 +443,7 @@ def machine_link_delete(request):
     return JsonResponse({"state": "ok", "msg": link_id})
 
 
+@silk_profile(name="获取服务器状态")
 def server_status_data(request):
     import psutil
     import platform
@@ -500,7 +515,7 @@ def server_status_data(request):
     }
     return JsonResponse({"state":"ok", "msg":data}, safe=False)
 
-
+@silk_profile(name="获取服务器信息")
 def server_status_info(request):
     import psutil
     import requests
