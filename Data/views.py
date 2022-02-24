@@ -16,7 +16,10 @@ import time
 import redis
 
 link_count_each_page = 2
-
+cpu={}
+mem={}
+disk={}
+net={}
 
 # Create your views here.
 def test(request):
@@ -443,11 +446,12 @@ def machine_link_delete(request):
     return JsonResponse({"state": "ok", "msg": link_id})
 
 
-@silk_profile(name="获取服务器状态")
-def server_status_data(request):
+def get_cpu_info():
     import psutil
     import platform
     import time
+
+    global cpu
 
     cpu_percent = psutil.cpu_percent(interval=1)
     cpus_percent = psutil.cpu_percent(percpu=True, interval=1)
@@ -471,7 +475,14 @@ def server_status_data(request):
         "softirq": cpu_times.softirq,
         "platform": uname.system + " " + uname.node + " " +uname.release + " "+uname.version + " " + uname.machine
     }
-    # print(cpu)
+    return cpu
+
+
+def get_mem_info():
+    import psutil
+
+    global mem
+
     mem_info = psutil.virtual_memory()
     mem_cache_info = psutil.swap_memory()
     mem = {
@@ -486,15 +497,30 @@ def server_status_data(request):
         "total": mem_info.total,
         "running": len(psutil.pids()),
     }
-    # print(mem)
+    return mem
+
+
+def get_disk_info():
+    import psutil
+
+    global disk
+
     disk_info = psutil.disk_usage("/")
-    dict = {
+    disk = {
         "used": disk_info.used,
         "total": disk_info.total,
         "free": disk_info.free,
         "percent": disk_info.percent,
     }
-    # print(dict)
+    return disk
+
+
+def get_net_info():
+    import psutil
+    import time
+
+    global net
+
     bytes_sent=0
     bytes_recv=0
     for i in range(2):
@@ -506,11 +532,34 @@ def server_status_data(request):
         "sent": bytes_sent*2,
         "recv": bytes_recv*2,
     }
-    # print(net)
+    return net
+
+
+@silk_profile(name="获取服务器状态")
+def server_status_data(request):
+    import threading
+
+    global cpu, mem, disk, net
+
+    t_cpu = threading.Thread(target=get_cpu_info, args=())
+    t_mem = threading.Thread(target=get_mem_info, args=())
+    t_disk = threading.Thread(target=get_disk_info, args=())
+    t_net = threading.Thread(target=get_net_info, args=())
+
+    t_cpu.start()
+    t_mem.start()
+    t_disk.start()
+    t_net.start()
+
+    t_cpu.join()
+    t_mem.join()
+    t_disk.join()
+    t_net.join()
+    
     data = {
         "cpu": cpu,
         "mem": mem,
-        "dict": dict,
+        "disk": disk,
         "net": net,
     }
     return JsonResponse({"state":"ok", "msg":data}, safe=False)
