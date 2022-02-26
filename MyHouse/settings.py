@@ -142,7 +142,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql', #设置为mysql数据库
         'NAME': 'MyHousePi',  #mysql数据库名
         'USER': 'root',  #mysql用户名
-        'PASSWORD': '123456',   #mysql密码
+        'PASSWORD': 'GuoHT990520#2',   #mysql密码
         'HOST': '',  #留空默认为localhost
         'PORT': '',  #留空默认为3306端口
     }
@@ -151,7 +151,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/0",
+        "LOCATION": "redis://:guoht990520_2_redis@127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }

@@ -177,8 +177,8 @@ def mqtt_ctrl(request):
 # 以下是即时通信
 online_user = set()
 online_service = set()
-redis_pool_from_user = redis.ConnectionPool(host="127.0.0.1", port="6379", db=4, decode_responses=False)
-redis_pool_from_service = redis.ConnectionPool(host="127.0.0.1", port="6379", db=5, decode_responses=False)
+redis_pool_from_user = redis.ConnectionPool(host="127.0.0.1", port="6379", db=4, password="guoht990520_2_redis", decode_responses=False)
+redis_pool_from_service = redis.ConnectionPool(host="127.0.0.1", port="6379", db=5, password="guoht990520_2_redis", decode_responses=False)
 
 
 @silk_profile(name="即时通信发送文件")
