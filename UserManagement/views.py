@@ -12,6 +12,7 @@ from common import getLoginInfo
 from common.login_required import *
 from MyHouse import settings
 import json
+import re
 
 email_body_reg = '''Email 地址验证
 
@@ -61,6 +62,13 @@ class Reg(View):
         passwd = request.POST.get("passwd")
         email = request.POST.get("email")
         verify = request.POST.get("verify")
+
+        name_result = re.match(r"^\w+$", name)
+        passwd_result = re.match(r"^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z._~!@#$^&*]+$)(?![a-z0-9]+$)(?![a-z._~!@#$^&*]+$)(?![0-9._~!@#$^&*]+$)[a-zA-Z0-9._~!@#$^&*]{8,}$", passwd)
+        email_result = re.match(r"^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$", email)
+        if  (name_result is None or passwd_result is None or email_result is None):
+            return JsonResponse({"state":"fail", "msg":"format error"}, safe=False, status=403)
+
         existed_user = User.objects.filter(Q(name=name) | Q(email=email))  # 用户名、邮箱 是否注册
         if len(existed_user) == 0:
             # 未注册，可以注册
@@ -143,6 +151,13 @@ class Log(View):
         name = request.POST.get("name")
         passwd = request.POST.get("passwd")
         is_remember = request.POST.get("is_remember")
+
+        name_result = re.match(r"(^\w+$)|(^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4}))$", name)
+        passwd_result = re.match(r"^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z._~!@#$^&*]+$)(?![a-z0-9]+$)(?![a-z._~!@#$^&*]+$)(?![0-9._~!@#$^&*]+$)[a-zA-Z0-9._~!@#$^&*]{8,}$", passwd)
+
+        if  (name_result is None or passwd_result is None):
+            return JsonResponse({"state":"fail", "msg":"format error"}, safe=False, status=403)
+
         users = User.objects.filter((Q(name=name) | Q(email=name)) & Q(is_active=True))  # 用户输入用户名为用户名或邮箱
         if not len(users):
             # 用户不存在
@@ -190,6 +205,12 @@ class ChgPwd(View):
         verify_code = request.POST.get("verify_code")
         new_passwd = request.POST.get("new_passwd")
 
+        passwd_result = re.match(r"^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z._~!@#$^&*]+$)(?![a-z0-9]+$)(?![a-z._~!@#$^&*]+$)(?![0-9._~!@#$^&*]+$)[a-zA-Z0-9._~!@#$^&*]{8,}$", new_passwd)
+        email_result = re.match(r"^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$", email)
+        print(passwd_result, email_result)
+        if passwd_result is None or email_result is None:
+            return JsonResponse({"state":"fail", "msg":"format error"}, safe=False, status=403)
+
         try:
             cur_user = User.objects.get(email=email)
             print(cur_user.email)
@@ -215,6 +236,7 @@ class ChgPwd(View):
     @silk_profile(name="用户修改密码邮箱验证")
     def get(self, request):
         """邮箱验证"""
+        import datetime
         global email_body_change
         email_title = "来自 《毕业设计》 的验证信息"
         verify_code = create_verify_code()
@@ -222,6 +244,11 @@ class ChgPwd(View):
         email = request.GET.get("email")
         email_exist = User.objects.filter(email=email)
         if len(email_exist) != 0:
+            send_history = EmailVerify.objects.filter(email_addr=email).order_by("-send_time")
+            time_delta = datetime.datetime.now() - send_history[0].send_time
+            if time_delta.seconds<60:
+                return JsonResponse({"state":"fail", "msg":"wait"}, status=403, safe=False)
+
             send_status = send_mail(email_title, email_body, settings.EMAIL_HOST_USER, [email])
             if send_status:
                 # 发送成功

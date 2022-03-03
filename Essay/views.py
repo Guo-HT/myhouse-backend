@@ -47,7 +47,7 @@ class EssayDetail(View):
             essay = Essay.objects.get(id=essay_id, is_checked=True)
         except Exception as e:
             print(e)
-            return JsonResponse({"state": "fail", "msg": "not found"})
+            return JsonResponse({"state": "fail", "msg": "not found"}, safe=False, status=404)
         else:
             ip = get_ip(request)
             if request.session.has_key("is_login"):

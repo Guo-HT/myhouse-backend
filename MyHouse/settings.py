@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'g)b=1h!@5tl0ar()@3#crta6@5zmz0*@q$59hwra&z_6+fd%vb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False # True
+DEBUG = True
 
 ALLOWED_HOSTS = ['*', ]
 
@@ -226,6 +226,11 @@ SILKY_PYTHON_PROFILER_BINARY = True
 # .prof文件保存路径（最好不要像我这样设置在项目目录中）
 # 如果没有本设置，prof文件将默认保存在MEDIA_ROOT里
 SILKY_PYTHON_PROFILER_RESULT_PATH = os.path.join(BASE_DIR, 'SilkProf')
+SILKY_ANALYZE_QUERIES = True
+# 身份认证
+#SILKY_AUTHENTICATION = True  # User must login
+#SILKY_AUTHORISATION = True  # User must have permissions
+#SILKY_PERMISSIONS = lambda user: user.is_superuser
 
 # 邮件配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
