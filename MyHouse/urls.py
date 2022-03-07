@@ -16,7 +16,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 from django.conf.urls import include, url
-# from django.conf.urls.static import static
 from django.views import static
 from MyHouse import settings
 from MyHouse import views
@@ -24,6 +23,7 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
     re_path("user/", include("UserManagement.urls")),
     re_path("data/", include("Data.urls")),
     re_path("essay/", include("Essay.urls")),

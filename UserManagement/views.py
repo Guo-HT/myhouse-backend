@@ -66,7 +66,7 @@ class Reg(View):
         name_result = re.match(r"^\w+$", name)
         passwd_result = re.match(r"^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z._~!@#$^&*]+$)(?![a-z0-9]+$)(?![a-z._~!@#$^&*]+$)(?![0-9._~!@#$^&*]+$)[a-zA-Z0-9._~!@#$^&*]{8,}$", passwd)
         email_result = re.match(r"^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$", email)
-        if  (name_result is None or passwd_result is None or email_result is None):
+        if  (name_result is None or len(name) <= 8 or passwd_result is None or email_result is None):
             return JsonResponse({"state":"fail", "msg":"format error"}, safe=False, status=403)
 
         existed_user = User.objects.filter(Q(name=name) | Q(email=email))  # 用户名、邮箱 是否注册
@@ -281,7 +281,7 @@ def add_photo(request):
     user_id = login_info["user_id"]  # 获取session中存储的用户信息
     photo_file = request.FILES["photo"]  # 提取文件对象
     file_name_list = photo_file.name.split(".")
-    file_type = file_name_list[len(file_name_list) - 1]  # 提取文件类型
+    file_type = file_name_list[len(file_name_list) - 1].lower()  # 提取文件类型，且转小写
     if file_type not in settings.PHOTO_TYPE:  # 文件类型
         return JsonResponse({"state": "fail", "msg": "file type not allowed"}, safe=False)
     elif photo_file.size > settings.PHOTO_SIZE:  # 文件过大

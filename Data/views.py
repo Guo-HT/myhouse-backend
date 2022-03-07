@@ -457,11 +457,15 @@ def get_cpu_info():
     cpus_percent = psutil.cpu_percent(percpu=True, interval=1)
     cpu_times = psutil.cpu_times_percent(percpu=False)
     uname = platform.uname()
-    with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
-        temp = f.readline()
-        temp = temp[0:len(temp)-1]
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            temp = f.readline()
+            temp = temp[0:len(temp)-1]
+            temp = int(temp)/1000
+    except:
+        temp = "未知"
     cpu = {
-        "temp": int(temp)/1000,
+        "temp": temp,
         "cpu_percent": cpu_percent,
         "core": len(cpus_percent),
         "cpus_percent": cpus_percent,

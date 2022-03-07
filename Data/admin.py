@@ -14,7 +14,7 @@ class MachineAdmin(admin.ModelAdmin):
 class MachineDataAdmin(admin.ModelAdmin):
     list_per_page = 20
     list_display = ["id", "machine", "data", "upload_time"]
-    search_fields = ["machine", "data"]
+    search_fields = ["machine__machine_name__icontains", "data"]
     list_display_links = ["id", "machine", "data"]
 
     def delete_data(self, request, queryset):
@@ -29,7 +29,7 @@ class MachineDataAdmin(admin.ModelAdmin):
 class CommandHistoryAdmin(admin.ModelAdmin):
     list_per_page = 20
     list_display = ["id", "machine", "command", "time"]
-    search_fields = ["machine", "command"]
+    search_fields = ["machine__machine_name__icontains", "command"]
     list_display_links = ["id", "machine", "command"]
 
     def delete_data(self, request, queryset):
@@ -45,7 +45,7 @@ class ChatHistoryAdmin(admin.ModelAdmin):
     list_per_page = 20
     list_display = ["id", "text", "user", "service", "time", "content_type", "from_type"]
     list_filter = ["content_type", "from_type"]
-    search_fields = ["text", "user", "service"]
+    search_fields = ["text", "user__name__icontains", "service__name__icontains"]
     list_display_links = ["id", "text", "user", "service"]
 
     def delete_data(self, request, queryset):
@@ -59,7 +59,7 @@ class MachineLinkAdmin(admin.ModelAdmin):
     list_per_page = 20
     list_display = ["id", "upper", "data_item", "condition", "condition_num", "lower", "command", "command_num"]
     list_filter = ["data_item"]
-    search_fields = ["id", "upper", "lower", "data_item"]
+    search_fields = ["id", "upper__machine_name__icontains", "lower__machine_name__icontains", "data_item"]
     list_display_links = ["id", "upper", "data_item", "condition", "condition_num", "lower", "command", "command_num"]
 
     def delete_data(self, request, queryset):

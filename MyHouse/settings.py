@@ -61,7 +61,7 @@ INSTALLED_APPS = [
 # 设置跨域可用
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = ('http://guohtgo.asuscomm.com:*', )
+CORS_ORIGIN_WHITELIST = ('http://180.76.174.125:*', )
 
 SESSION_COOKIE_SAMESITE = None  # response header set-cookie:samesite=lax  Default: 'Lax'
 CSRF_COOKIE_SAMESITE = None
@@ -140,7 +140,7 @@ WSGI_APPLICATION = 'MyHouse.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', #设置为mysql数据库
-        'NAME': 'MyHousePi',  #mysql数据库名
+        'NAME': 'MyHouse_cloud',  #mysql数据库名
         'USER': 'root',  #mysql用户名
         'PASSWORD': 'GuoHT990520#2',   #mysql密码
         'HOST': '',  #留空默认为localhost
@@ -203,7 +203,7 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/upload_files/'  # 你的media url 在Url显示并没什么关系
 
-MEDIA_ROOT = r"/home/pi/Code/Django_proj/MyHouse_Backend/UpLoadFiles/"
+MEDIA_ROOT = r"/root/project/var/UpLoadFiles/"
 
 # ckeditor配置
 CKEDITOR_JQUERY_URL = 'https://cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js'
@@ -225,12 +225,11 @@ SILKY_PYTHON_PROFILER = True
 SILKY_PYTHON_PROFILER_BINARY = True
 # .prof文件保存路径（最好不要像我这样设置在项目目录中）
 # 如果没有本设置，prof文件将默认保存在MEDIA_ROOT里
-SILKY_PYTHON_PROFILER_RESULT_PATH = os.path.join(BASE_DIR, 'SilkProf')
-SILKY_ANALYZE_QUERIES = True
-# 身份认证
-#SILKY_AUTHENTICATION = True  # User must login
-#SILKY_AUTHORISATION = True  # User must have permissions
-#SILKY_PERMISSIONS = lambda user: user.is_superuser
+SILKY_PYTHON_PROFILER_RESULT_PATH = '/root/project/var/SilkProf'
+# 认证需要自己写
+SILKY_AUTHENTICATION = True  # User must login
+SILKY_AUTHORISATION = True  # User must have permissions  # from django.contrib.auth.models import User as admin
+SILKY_PERMISSIONS = lambda user: user.is_superuser
 
 # 邮件配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -245,11 +244,10 @@ PHOTO_SIZE = 3*1024*1024
 PHOTO_TYPE = ["png", "jpg", "gif"]
 
 # 后端域
-BACKEND_SITE = "http://guohtgo.asuscomm.com:8003"
-# BACKEND_SITE = "http://u389m52694.wicp.vip:52017/"
+BACKEND_SITE = "http://180.76.174.125:8003"
 
 # MQTT服务器相关
-MQTT_SERVER_HOST = "guohtgo.asuscomm.com"
-MQTT_SERVER_PORT = 18830
+MQTT_SERVER_HOST = "180.76.174.125"
+MQTT_SERVER_PORT = 1883
 MQTT_USERNAME = "client"
 MQTT_PASSWORD = "GuoHT990520#2"
