@@ -5,8 +5,8 @@ from Essay.models import *
 # Register your models here.
 class EssayAdmin(admin.ModelAdmin):
     list_per_page = 20
-    list_display = ["id", "title", "content_preview", "user_name", "create_time", "watch_num", "is_checked"]
-    list_filter = ["is_checked"]
+    list_display = ["id", "title", "content_preview", "user_name", "create_time", "watch_num", "is_delete", "is_checked"]
+    list_filter = ["is_delete", "is_checked"]
     search_fields = ["id", "title", "content", "user__name__icontains"]
     list_display_links = ["id", "title", "content_preview", "user_name"]
 

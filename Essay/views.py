@@ -1,4 +1,4 @@
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, QueryDict
 from django.template.defaultfilters import escape
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -44,7 +44,7 @@ class EssayDetail(View):
         """获取某篇文章"""
         essay_id = request.GET.get("id")
         try:
-            essay = Essay.objects.get(id=essay_id, is_checked=True)
+            essay = Essay.objects.get(id=essay_id, is_checked=True, is_delete=False)
         except Exception as e:
             print(e)
             return JsonResponse({"state": "fail", "msg": "not found"}, safe=False, status=404)
@@ -96,6 +96,21 @@ class EssayDetail(View):
             }
             return JsonResponse({"state": "ok", "msg": data}, safe=False)
 
+    @silk_profile(name="删除发布的文章")
+    @method_decorator(login_required)
+    def delete(self, request):
+        user_id = request.session["user_id"]
+        _delete = QueryDict(request.body)
+        essay_id = _delete.get('essay_id')
+        print(user_id, essay_id)
+        this_essaies = Essay.objects.filter(user_id=user_id, id=essay_id, is_delete=False, is_checked=True)
+        if len(this_essaies):
+            this_essay = this_essaies[0]
+            this_essay.is_delete=True
+            this_essay.save()
+            return JsonResponse({"state": "ok", "msg": "is delete"}, safe=False)
+        else:
+            return JsonResponse({"state": "fail", "msg": "not found"}, safe=False, status=404)
 
 # 接受富文本编辑器的图片
 @csrf_exempt
@@ -144,7 +159,7 @@ def get_list(request):
     reg = re.compile('<[^>]*>')
     if list_for == "index":
         # 获取主页列表（top 5）
-        recent_five = Essay.objects.filter(is_checked=True).order_by("-create_time")[0:5]
+        recent_five = Essay.objects.filter(is_checked=True, is_delete=False).order_by("-create_time")[0:5]
         data_list = []
         for each in recent_five:
             each_data = dict()
@@ -159,7 +174,7 @@ def get_list(request):
         return JsonResponse(send_data, safe=False)
     if list_for == "recent":
         # 获取主页列表（top 5）
-        recent_five = Essay.objects.filter(is_checked=True).order_by("-create_time")[0:essay_link_each_recommend]
+        recent_five = Essay.objects.filter(is_checked=True, is_delete=False).order_by("-create_time")[0:essay_link_each_recommend]
         data_list = []
         for each in recent_five:
             each_data = dict()
@@ -183,7 +198,7 @@ def get_list(request):
         hot_five_essay_id = [i[0] for i in hot_five]
         data_list = []
         for each in hot_five_essay_id:
-            each = Essay.objects.get(id=each)
+            each = Essay.objects.get(id=each, is_checked=True, is_delete=False)
             each_data = dict()
             each_data["id"] = each.id
             each_data["title"] = each.title
@@ -199,14 +214,14 @@ def get_list(request):
         page = request.GET.get("page")
         search_str = request.GET.get("search")
         if search_str == "":  # 所有
-            essay_list = Essay.objects.filter(is_checked=True).order_by("-create_time")
+            essay_list = Essay.objects.filter(is_checked=True, is_delete=False).order_by("-create_time")
         else:  # 搜索
             key_list = search_str.split(" ")
             q = Q()
             for key in key_list:
                 q.add(("title__icontains", key), Q.OR)
                 q.add(("content__icontains", key), Q.OR)
-            essay_list = Essay.objects.filter(q, is_checked=True).order_by("-create_time")
+            essay_list = Essay.objects.filter(q, is_checked=True, is_delete=False).order_by("-create_time")
         data_list = []
         paginator = Paginator(essay_list, essay_count_each_search_page)
         page_num = paginator.num_pages  # 总页数
@@ -239,7 +254,7 @@ def do_good(request):
     user_id = request.session["user_id"]
     # print(essay_id, user_id)
     try:
-        essay = Essay.objects.get(id=essay_id)
+        essay = Essay.objects.get(id=essay_id, is_checked=True, is_delete=False)
     except Exception as e:
         # print(e)
         return JsonResponse({"state": "fail", "msg": "404 not fount"}, status=404)
@@ -267,7 +282,7 @@ def do_collect(request):
     # print(essay_id, user_id)
     collect_state = ""
     try:
-        essay = Essay.objects.get(id=essay_id)
+        essay = Essay.objects.get(id=essay_id, is_checked=True, is_delete=False)
     except Exception as e:
         # print(e)
         return JsonResponse({"state": "fail", "msg": "404 not fount"}, status=404)
@@ -448,13 +463,16 @@ def get_per_info_list(request):
     user_id = request.session["user_id"]
 
     if info_type == "collections":
-        query_list = EssayCollection.objects.filter(user_id=user_id).order_by("-time")
+        query_list = EssayCollection.objects.filter(user_id=user_id, essay__is_delete=False, essay__is_checked=True).order_by("-time")
     elif info_type == "history":
-        query_list = BrowseHistory.objects.filter(user_id=user_id).order_by("-time")
+        query_list = BrowseHistory.objects.filter(user_id=user_id, essay__is_delete=False, essay__is_checked=True).order_by("-time")
     elif info_type == "good":
-        query_list = GoodList.objects.filter(user_id=user_id).order_by("-time")
+        query_list = GoodList.objects.filter(user_id=user_id, essay__is_delete=False, essay__is_checked=True).order_by("-time")
+    elif info_type == "upload":
+        query_list = Essay.objects.filter(user_id=user_id, is_delete=False, is_checked=True).order_by("-create_time")
     else:
         return JsonResponse({"state": "fail", "msg": "get away"}, safe=False, status=403)
+
 
     paginator = Paginator(query_list, personal_info_count_per_page)
     page_num = paginator.num_pages  # 总页数
@@ -464,12 +482,20 @@ def get_per_info_list(request):
 
     data_list = []
     reg = re.compile('<[^>]*>')
-    for each in collect_page:
-        data = dict()
-        data["title"] = escape(each.essay.title)
-        data["id"] = each.essay.id
-        data["content"] = escape(reg.sub('', each.essay.content).replace('\n', '').replace(' ', '')[0:50])
-        data_list.append(data)
+    if  info_type=='upload':
+        for each in collect_page:
+            data=dict()
+            data["title"] = escape(each.title)
+            data["id"] = each.id
+            data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
+            data_list.append(data)
+    else:
+        for each in collect_page:
+            data = dict()
+            data["title"] = escape(each.essay.title)
+            data["id"] = each.essay.id
+            data["content"] = escape(reg.sub('', each.essay.content).replace('\n', '').replace(' ', '')[0:50])
+            data_list.append(data)
     # print(data_list)
     return JsonResponse(
         {"state": "ok", "msg": data_list, "page_num": page_num, "per_page": personal_info_count_per_page,

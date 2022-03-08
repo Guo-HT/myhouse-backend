@@ -13,6 +13,7 @@ class Essay(models.Model):
     create_time = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     watch_num = models.IntegerField(default=0, verbose_name="浏览量")
     is_checked = models.BooleanField(default=True, verbose_name="是否过审")
+    is_delete = models.BooleanField(default=False, verbose_name="是否被用户删除")
 
     class Meta:
         db_table = "essay_info"
@@ -24,9 +25,13 @@ class Essay(models.Model):
 
     def content_preview(self):
         return self.content[0:10]
+    
+    content_preview.short_description = "文章内容"
 
     def user_name(self):
         return self.user.name
+
+    user_name.short_description = "发表用户"
 
 
 # 文章评论
