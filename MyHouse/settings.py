@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'g)b=1h!@5tl0ar()@3#crta6@5zmz0*@q$59hwra&z_6+fd%vb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*', ]
 
@@ -101,6 +101,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'dwebsocket.middleware.WebSocketMiddleware',
     'silk.middleware.SilkyMiddleware',  # 性能监测
+    'MyHouse.middleware.BanIp',  # 自定义过滤中间件
 ]
 
 PASSWORD_HASHERS = (

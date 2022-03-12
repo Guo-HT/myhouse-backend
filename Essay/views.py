@@ -112,6 +112,7 @@ class EssayDetail(View):
         else:
             return JsonResponse({"state": "fail", "msg": "not found"}, safe=False, status=404)
 
+
 # 接受富文本编辑器的图片
 @csrf_exempt
 @silk_profile(name="富文本异步上传")
