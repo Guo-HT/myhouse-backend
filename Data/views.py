@@ -599,6 +599,18 @@ def server_status_info(request):
     return JsonResponse({"state":"ok", "msg":info}, safe=False)
 
 
+@silk_profile(name="获取IP黑名单")
+def ip_banned(request):
+    ban_ip_data = BanIp.objects.all()
+    data=[]
+    for each in ban_ip_data:
+        each_data = dict()
+        each_data["ip"] = each.ip_addr
+        each_data["times"] = each.times
+        each_data["last_time"] = each.last_time.strftime('%Y-%m-%d %H:%M:%S')
+        data.append(each_data)
+    return JsonResponse({"state":"ok", "msg":data}, safe=False)
+
 # ############## MQTT操作 ##################
 def connect_mqtt_server(client):
     client.username_pw_set(settings.MQTT_USERNAME, settings.MQTT_PASSWORD)

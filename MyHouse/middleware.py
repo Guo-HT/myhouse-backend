@@ -1,5 +1,6 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.http import HttpResponse,JsonResponse, QueryDict
+from Data.models import BanIp as ban_ip_model
 import redis
 import re
 import datetime
@@ -11,6 +12,8 @@ redis_pool_ban_ip = redis.ConnectionPool(host="127.0.0.1", port="6379", db=2, pa
 
 class BanIp(MiddlewareMixin):
     def process_request(self, request):
+        global redis_pool_ban_ip
+        global redis_pool_ban_words
         # 建立连接
         ban_words_con = redis.Redis(connection_pool=redis_pool_ban_words)  # 连接redis
         ban_ip_con = redis.Redis(connection_pool=redis_pool_ban_ip)  # 连接redis
@@ -43,4 +46,11 @@ class BanIp(MiddlewareMixin):
             # print("敏感")
             banip_value = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             ban_ip_con.set(ip, banip_value, ex=60)
+            # 查看数据库种有无禁用记录，没有则新建
+            banned = ban_ip_model.objects.filter(ip_addr=ip).first()
+            if banned:
+                banned.times += 1
+                banned.save()
+            else:
+                banned = ban_ip_model.objects.create(ip_addr=ip, times=1)
             return JsonResponse({'state': "fail", "msg":"query string error"}, status=403, safe=False)

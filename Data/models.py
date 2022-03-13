@@ -87,3 +87,17 @@ class MachineLink(models.Model):
 
     def __str__(self):
         return self.upper.machine_name + "->" + self.lower.machine_name
+
+
+class BanIp(models.Model):
+    ip_addr = models.CharField(max_length=16, default="", unique=True, verbose_name="IP地址")
+    times = models.IntegerField(default=0, verbose_name="次数")
+    last_time = models.DateTimeField(auto_now=True, verbose_name="最近一次时间")
+
+    def __str__(self):
+        return self.ip_addr
+
+    class Meta:
+        db_table="ip_banned"
+        verbose_name = "IP黑名单"
+        verbose_name_plural = "IP黑名单"
