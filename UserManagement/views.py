@@ -52,6 +52,19 @@ def test(request):
     return JsonResponse({"state": "ok"}, safe=False)
 
 
+# 生成验证码
+def create_verify_code():
+    """生成6位验证码"""
+    from random import choice
+    word_list = ['1','2','3','4','5','6','7','8','9','0','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    verify_str=""
+    for i in range(6):
+        verify_str += choice(word_list)
+    print(verify_str)
+    # 返回值为str类型
+    return verify_str
+
+
 # 用户注册
 class Reg(View):
     @silk_profile(name="用户注册")
@@ -88,32 +101,28 @@ class Reg(View):
 
     @silk_profile(name="用户注册获取验证码")
     def get(self, request):
+        from celery_tasks import email_task
         """发送验证码，进行邮箱验证"""
         global email_body_reg
-        email_title = '来自 《毕业设计》 的验证信息'
+
         verify_code = create_verify_code()
-        email_body = email_body_reg.format(verify_code=verify_code)
+
         email = request.GET.get("email")
         email_exist = User.objects.filter(email=email)
         if len(email_exist) == 0:
-            send_status = send_mail(email_title, email_body, settings.EMAIL_HOST_USER, [email])
-            if send_status:
-                # 发送成功
-                verify = EmailVerify()  # 实例化存储对象
-                verify.email_addr = email
-                verify.verify_code = verify_code
-                verify.aim = "r"
-                try:
-                    verify.save()
-                except Exception as e:
-                    print("邮件发送成功，数据存储失败")
-                    print(e)
-                    return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
-                print("send_to:", email, "   verify_code:", verify_code, "邮件发送成功，数据保存完成！")
+            email_task.send_mail_register.delay(email, verify_code)
+            # 发送成功
+            verify = EmailVerify()  # 实例化存储对象
+            verify.email_addr = email
+            verify.verify_code = verify_code
+            verify.aim = "r"
+            try:
+                verify.save()
                 return JsonResponse({"state": "ok", "msg": "success"}, safe=False)
-            else:
-                print("出现问题，邮件状态码：", send_status)
-                return JsonResponse({"state": "fail", "msg": "send failed"}, safe=False)
+            except Exception as e:
+                print("邮件发送成功，数据存储失败")
+                print(e)
+                return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
         else:
             print('邮箱被使用，退回！')
             return JsonResponse({"state": "fail", "msg": "email exist"})
@@ -236,37 +245,31 @@ class ChgPwd(View):
     @silk_profile(name="用户修改密码邮箱验证")
     def get(self, request):
         """邮箱验证"""
+        from celery_tasks import email_task
         import datetime
-        global email_body_change
-        email_title = "来自 《毕业设计》 的验证信息"
-        verify_code = create_verify_code()
-        email_body = email_body_change.format(verify_code=verify_code)
+
         email = request.GET.get("email")
         email_exist = User.objects.filter(email=email)
         if len(email_exist) != 0:
+            # 频率限制
             send_history = EmailVerify.objects.filter(email_addr=email).order_by("-send_time")
             time_delta = datetime.datetime.now() - send_history[0].send_time
-            if time_delta.seconds<60:
+            if time_delta.seconds < 60:
                 return JsonResponse({"state":"fail", "msg":"wait"}, status=403, safe=False)
-
-            send_status = send_mail(email_title, email_body, settings.EMAIL_HOST_USER, [email])
-            if send_status:
-                # 发送成功
-                verify = EmailVerify()  # 实例化存储对象
-                verify.email_addr = email
-                verify.verify_code = verify_code
-                verify.aim = "c"
-                try:
-                    verify.save()
-                except Exception as e:
-                    print("邮件发送成功，数据存储失败")
-                    print(e)
-                    return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
-                print("send_to:", email, "   verify_code:", verify_code, "邮件发送成功，数据保存完成！")
+            verify_code = create_verify_code()
+            email_task.send_mail_change_pwd.delay(email, verify_code)
+            # 发送成功
+            verify = EmailVerify()  # 实例化存储对象
+            verify.email_addr = email
+            verify.verify_code = verify_code
+            verify.aim = "c"
+            try:
+                verify.save()
                 return JsonResponse({"state": "ok", "msg": "success"}, safe=False)
-            else:
-                print("出现问题，邮件状态码：", send_status)
-                return JsonResponse({"state": "fail", "msg": "send failed"}, safe=False)
+            except Exception as e:
+                print("邮件发送成功，数据存储失败")
+                print(e)
+                return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
         else:
             print('邮箱被使用，退回！')
             return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False)
@@ -309,19 +312,6 @@ def user_status(request):
     else:
         user_info['head_photo'] = None
     return JsonResponse(user_info, safe=False)
-
-
-# 生成验证码
-def create_verify_code():
-    """生成6位验证码"""
-    from random import randint
-    verify_list = []
-    for i in range(6):
-        verify_list.append(str(randint(0, 9)))
-    verify_code = ''.join(verify_list)
-    print(verify_code)
-    # 返回值为str类型
-    return verify_code
 
 
 # 保存文件
