@@ -13,38 +13,11 @@ from common.login_required import *
 from MyHouse import settings
 import json
 import re
+import redis
 
-email_body_reg = '''Email 地址验证
 
-        尊敬的用户：
-
-            这封信是由 《MyHouse智能家居》 发送的。
-
-            您收到这封邮件，是由于在 《MyHouse智能家居》 进行了新用户注册，使用了这个邮箱地址。如果您并没有访问过 《MyHouse智能家居》，或没有进行上述操作，请忽略这封邮件。您不需要退订或进行其他进一步的操作。
-
-            注册验证码：  {verify_code}
-
-            请谨慎操作。
-
-            最后，祝您学业有成、工作顺利。
-
-            '''
-
-email_body_change = '''Email 地址验证
-
-        尊敬的用户：
-
-            这封信是由 《MyHouse智能家居》 发送的。
-
-            您收到这封邮件，是由于在 《MyHouse智能家居》 进行了密码找回，使用了这个邮箱地址。如果您并没有访问过 《MyHouse智能家居》，或没有进行上述操作，请忽略这封邮件。您不需要退订或进行其他进一步的操作。
-
-            修改密码验证码：  {verify_code}
-
-            请谨慎操作。
-
-            最后，祝您学业有成、工作顺利。
-
-            '''
+redis_pool_register = redis.ConnectionPool(host="127.0.0.1", port="6379", db=6, password="guoht990520_2_redis", decode_responses=True)
+redis_pool_change = redis.ConnectionPool(host="127.0.0.1", port="6379", db=7, password="guoht990520_2_redis", decode_responses=True)
 
 
 # Create your views here.
@@ -71,6 +44,7 @@ class Reg(View):
     def post(self, request):
         """用户注册，需要的数据：用户名，密码，邮箱，验证码，头像"""
         from datetime import datetime, timedelta
+        conn_register = redis.Redis(connection_pool=redis_pool_register)  # 建立redis连接
         name = request.POST.get("name")
         passwd = request.POST.get("passwd")
         email = request.POST.get("email")
@@ -85,11 +59,12 @@ class Reg(View):
         existed_user = User.objects.filter(Q(name=name) | Q(email=email))  # 用户名、邮箱 是否注册
         if len(existed_user) == 0:
             # 未注册，可以注册
-            deadline = datetime.now() - timedelta(0, 60 * 5)
-            email_history = EmailVerify.objects.filter(email_addr=email, verify_code=verify, send_time__gt=deadline,
-                                                       aim="r")
-
-            if len(email_history) != 0:
+            # deadline = datetime.now() - timedelta(0, 60 * 5)
+            # email_history = EmailVerify.objects.filter(email_addr=email, verify_code=verify, send_time__gt=deadline,
+            #                                            aim="r")
+            sended_verify_code_history = conn_register.keys(email+"-*")  # 通过redis取验证信息
+            sended_verify_code_list = conn_register.mget(sended_verify_code_history)            
+            if verify in sended_verify_code_list:
                 # 如果发送成功，保存发送消息
                 user_reg = User.objects.create(name=name, passwd=passwd, email=email, is_active=True)
                 print("数据保存成功！")
@@ -101,16 +76,16 @@ class Reg(View):
 
     @silk_profile(name="用户注册获取验证码")
     def get(self, request):
+        import datetime
         from celery_tasks import email_task
         """发送验证码，进行邮箱验证"""
-        global email_body_reg
-
-        verify_code = create_verify_code()
-
+        conn_register = redis.Redis(connection_pool=redis_pool_register)  # 建立redis连接
+        verify_code = create_verify_code()  # 生成验证码
         email = request.GET.get("email")
-        email_exist = User.objects.filter(email=email)
-        if len(email_exist) == 0:
-            email_task.send_mail_register.delay(email, verify_code)
+        email_exist = User.objects.filter(email=email)  # 判断有无注册过
+        if len(email_exist) == 0:  # 如果无，则允许发送，注册
+            email_task.send_mail_register.delay(email, verify_code)  # 发送给消息队列
+            conn_register.set(email+f"-{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}", verify_code, ex=60*5)  # 放入redis缓存
             # 发送成功
             verify = EmailVerify()  # 实例化存储对象
             verify.email_addr = email
@@ -208,8 +183,12 @@ class Log(View):
 class ChgPwd(View):
     @silk_profile(name="用户修改密码")
     def post(self, request):
-        from datetime import datetime, timedelta
         """修改密码"""
+        from datetime import datetime, timedelta
+
+        global redis_pool_change
+        conn_change = redis.Redis(connection_pool=redis_pool_change)  # 建立redis连接
+        
         email = request.POST.get("email")
         verify_code = request.POST.get("verify_code")
         new_passwd = request.POST.get("new_passwd")
@@ -226,10 +205,12 @@ class ChgPwd(View):
         except Exception as e:
             return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False)
         else:
-            deadline = datetime.now() - timedelta(0, 60 * 5)
-            verify_check = EmailVerify.objects.filter(email_addr=email, verify_code=verify_code, send_time__gt=deadline,
-                                                      aim="c")
-            if len(verify_check):
+            # deadline = datetime.now() - timedelta(0, 60 * 5)
+            # verify_check = EmailVerify.objects.filter(email_addr=email, verify_code=verify_code, send_time__gt=deadline,
+            #                                           aim="c")
+            sended_verify_code_history = conn_change.keys(email+"-*")
+            send_verify_code_list = conn_change.mget(sended_verify_code_history)
+            if verify_code in send_verify_code_list:
                 print(cur_user)
                 cur_user.passwd = new_passwd
                 try:
@@ -248,6 +229,9 @@ class ChgPwd(View):
         from celery_tasks import email_task
         import datetime
 
+        global redis_pool_change
+        conn_change = redis.Redis(connection_pool=redis_pool_change)  # 建立redis连接
+
         email = request.GET.get("email")
         email_exist = User.objects.filter(email=email)
         if len(email_exist) != 0:
@@ -258,6 +242,7 @@ class ChgPwd(View):
                 return JsonResponse({"state":"fail", "msg":"wait"}, status=403, safe=False)
             verify_code = create_verify_code()
             email_task.send_mail_change_pwd.delay(email, verify_code)
+            conn_change.set(email+f"-{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}", verify_code, ex=60*5)
             # 发送成功
             verify = EmailVerify()  # 实例化存储对象
             verify.email_addr = email

@@ -2,14 +2,14 @@
 
 ## 环境：
 #### 服务器硬件环境： 
-- 处理器：Broadcom BCM2711（Cortex A72），4核，1.5GHz  
+- 处理器：Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz 1核  
 - 内存：2GB 
-- 硬盘空间：32GB 
+- 硬盘空间：60GB 
 #### 单片机环境： 
 - 单片机：ESP8266-12E NodeMCU 
 - 开发环境：Arduino IDE（1.8.19） 
 #### 软件环境： 
-- 操作系统：Raspberry Pi OS（基于Debian11，linux5.10） 
+- 操作系统：Ubuntu 18.04 LTS 
 - 编程语言：Python（3.7.9） 
 - Web后端框架：django（2.2.0） 
 - 分布式消息队列：Celery（5.1.0） 
@@ -18,7 +18,7 @@
 - 数据库：MariaDB（10.3） 
 - 缓存：Redis（5.0.14） 
 - MQTT服务器：Mosquitto（1.5.7） 
-- 开发工具：PyCharm、Visual Studio Code 
+- 开发工具：PyCharm、Visual Studio Code
 
 ## 安装：
 1. 安装nginx服务器：`sudo apt-get install nginx`
@@ -40,4 +40,26 @@
 17. 安装django数据库组件：`pip install MySQL-python`
 18. 安装其他：`pip install psutil platform requests getpass`
 
+## 项目启动
+1. 配置：进入`/MyHouse/settings.py`，更改数据库、缓存、MQTT服务器、后端IP地址、Silk数据存储目录等项目基本信息
+2. 更改gunicorn配置：进入`gunicorn.conf.py`，更改`accesslog`及`errorlog`路径
+3. 更改服务启动脚本：进入`start_myhouse.sh`，更改`celery_log_path`
+4. 运行服务启动脚本：`bash start_myhouse.sh`
 
+## Redis缓存说明
+- db  0: session
+- db  1: celery
+- db  2: ip黑名单
+- db  3: 敏感词
+- db  4: 用户ws消息
+- db  5: 客服ws消息
+- db  6: 注册验证缓存
+- db  7: 修改验证缓存
+- db  8: 
+- db  9: 
+- db 10: 
+- db 11: 
+- db 12: 
+- db 13: 
+- db 14: 
+- db 15: 
