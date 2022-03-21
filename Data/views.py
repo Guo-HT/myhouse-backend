@@ -42,18 +42,18 @@ class Machines(View):
         try:
             machine = Machine.objects.get(mac_addr=sn.upper())
             if machine.user_belong_id is not None and machine.user_belong_id != user_id:
-                return JsonResponse({"state": "fail", "msg": "belong to else"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "belong to else"}, safe=False, status=403)
             elif machine.user_belong_id == user_id:
-                return JsonResponse({"state": "fail", "msg": "already bind"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "already bind"}, safe=False, status=403)
             elif machine.work_type == work_type:
                 machine.user_belong_id = user_id
                 machine.machine_name = escape(machine_name)
                 machine.save()
                 return JsonResponse({"state": "ok", "msg": "ok"}, safe=False)
             else:
-                return JsonResponse({"state": "fail", "msg": "type not ok"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "type not ok"}, safe=False, status=403)
         except Exception as e:
-            return JsonResponse({"state": "fail", "msg": "machine not exist"}, safe=False)
+            return JsonResponse({"state": "fail", "msg": "machine not exist"}, safe=False, status=403)
 
     @silk_profile(name="获取设备绑定列表")
     @method_decorator(login_required)
@@ -81,7 +81,7 @@ def cut_bind(request):
     machine_type = request.POST.get("type")
     machine = Machine.objects.get(id=machine_id)
     if machine.work_type != machine_type:
-        return JsonResponse({"state": "fail", "msg": "type error"}, safe=False)
+        return JsonResponse({"state": "fail", "msg": "type error"}, safe=False, status=403)
     else:
         machine.user_belong = None
         machine.save()
@@ -171,7 +171,7 @@ def mqtt_ctrl(request):
         client.disconnect()
         return JsonResponse({"state": "ok", "msg": "ok"}, safe=False)
     else:
-        return JsonResponse({"state": "fail", "msg": "offline"}, safe=False)
+        return JsonResponse({"state": "fail", "msg": "offline"}, safe=False, status=403)
 
 
 # 以下是即时通信
@@ -234,7 +234,7 @@ def chat_file(request):
     except Exception as e:
         # print(e)
         # print(e.__traceback__.tb_lineno)
-        return JsonResponse({"state": "fail", "msg": "fail"}, safe=False)
+        return JsonResponse({"state": "fail", "msg": "fail"}, safe=False, status=500)
 
 
 @login_required

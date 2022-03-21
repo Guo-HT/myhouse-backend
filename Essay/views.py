@@ -258,7 +258,7 @@ def do_good(request):
         essay = Essay.objects.get(id=essay_id, is_checked=True, is_delete=False)
     except Exception as e:
         # print(e)
-        return JsonResponse({"state": "fail", "msg": "404 not fount"}, status=404)
+        return JsonResponse({"state": "fail", "msg": "404 not fount"}, safe=False, status=404)
     else:
         try:
             good_mem = GoodList.objects.get(user_id=user_id, essay_id=essay_id)  # 点过赞，删除该条记录

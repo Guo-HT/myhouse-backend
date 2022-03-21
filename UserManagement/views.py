@@ -70,9 +70,9 @@ class Reg(View):
                 print("数据保存成功！")
                 return JsonResponse({"state": "ok", "msg": "welcome!"})
             else:
-                return JsonResponse({"state": "fail", "msg": "wrong or timeout"})
+                return JsonResponse({"state": "fail", "msg": "wrong or timeout"}, safe=False, status=403)
         else:
-            return JsonResponse({"state": 'fail', "msg": "user has existed"}, safe=False)
+            return JsonResponse({"state": 'fail', "msg": "user has existed"}, safe=False, status=403)
 
     @silk_profile(name="用户注册获取验证码")
     def get(self, request):
@@ -97,10 +97,10 @@ class Reg(View):
             except Exception as e:
                 print("邮件发送成功，数据存储失败")
                 print(e)
-                return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False, status=500)
         else:
             print('邮箱被使用，退回！')
-            return JsonResponse({"state": "fail", "msg": "email exist"})
+            return JsonResponse({"state": "fail", "msg": "email exist"}, safe=False, status=403)
 
     @silk_profile(name="用户注销")
     @method_decorator(login_required)
@@ -114,11 +114,11 @@ class Reg(View):
             user.save()
             request.session.clear()  # .flush()
             request.session.flush()  # .flush()
-            response = JsonResponse({"state": "ok", "msg": "user is not active"}, safe=False)
+            response = JsonResponse({"state": "ok", "msg": "user is not active"}, safe=False, status=403)
             response.delete_cookie("sessionid")
             return response
         except Exception as e:
-            return JsonResponse({"state": "fail", "msg": "error"}, safe=False)
+            return JsonResponse({"state": "fail", "msg": "error"}, safe=False, status=500)
 
     @silk_profile(name="用户信息修改")
     @method_decorator(login_required)
@@ -145,7 +145,7 @@ class Log(View):
         users = User.objects.filter((Q(name=name) | Q(email=name)) & Q(is_active=True))  # 用户输入用户名为用户名或邮箱
         if not len(users):
             # 用户不存在
-            return JsonResponse({'state': 'fail', "msg": "user not exist"}, safe=False)
+            return JsonResponse({'state': 'fail', "msg": "user not exist"}, safe=False, status=403)
         elif len(users) >= 1:
             # 理论上不会重复，故数量 ≥1 即可
             try:
@@ -166,7 +166,7 @@ class Log(View):
                     return response  # 登录成功
             except Exception as e:
                 print(e)
-                return JsonResponse({"state": "fail", "msg": "password error"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "password error"}, safe=False, status=403)
 
     @silk_profile(name="用户退出登录")
     def get(self, request):
@@ -203,7 +203,7 @@ class ChgPwd(View):
             cur_user = User.objects.get(email=email)
             print(cur_user.email)
         except Exception as e:
-            return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False)
+            return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False, status=403)
         else:
             # deadline = datetime.now() - timedelta(0, 60 * 5)
             # verify_check = EmailVerify.objects.filter(email_addr=email, verify_code=verify_code, send_time__gt=deadline,
@@ -219,9 +219,9 @@ class ChgPwd(View):
                     return JsonResponse({"state": "ok", "msg": "ok"}, safe=False)
                 except Exception as e:
                     print("密码更改失败", e)
-                    return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
+                    return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False, status=500)
             else:
-                return JsonResponse({"state": "fail", "msg": "not verified"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "not verified"}, safe=False, status=403)
 
     @silk_profile(name="用户修改密码邮箱验证")
     def get(self, request):
@@ -254,10 +254,10 @@ class ChgPwd(View):
             except Exception as e:
                 print("邮件发送成功，数据存储失败")
                 print(e)
-                return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "database save failed"}, safe=False, status=500)
         else:
             print('邮箱被使用，退回！')
-            return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False)
+            return JsonResponse({"state": "fail", "msg": "user not exist"}, safe=False, status=403)
 
 
 @silk_profile(name="用户头像上传")
@@ -271,9 +271,9 @@ def add_photo(request):
     file_name_list = photo_file.name.split(".")
     file_type = file_name_list[len(file_name_list) - 1].lower()  # 提取文件类型，且转小写
     if file_type not in settings.PHOTO_TYPE:  # 文件类型
-        return JsonResponse({"state": "fail", "msg": "file type not allowed"}, safe=False)
+        return JsonResponse({"state": "fail", "msg": "file type not allowed"}, safe=False, status=403)
     elif photo_file.size > settings.PHOTO_SIZE:  # 文件过大
-        return JsonResponse({"state": "fail", "msg": "size too large"}, safe=False)
+        return JsonResponse({"state": "fail", "msg": "size too large"}, safe=False, status=403)
 
     file_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')  # 基于时间的文件名，避免重复
     file_path = f"head_photo/{file_time}.{file_type}"  # 路径&文件名
@@ -346,7 +346,7 @@ class ServiceLog(View):
         print(users)
         if not len(users):
             # 用户不存在
-            return JsonResponse({'state': 'fail', "msg": "user not exist"}, safe=False)
+            return JsonResponse({'state': 'fail', "msg": "user not exist"}, safe=False, status=403)
         elif len(users) >= 1:
             # 理论上不会重复，故数量 ≥1 即可
             try:
@@ -367,7 +367,7 @@ class ServiceLog(View):
                     return response  # 登录成功
             except Exception as e:
                 print(e)
-                return JsonResponse({"state": "fail", "msg": "password error"}, safe=False)
+                return JsonResponse({"state": "fail", "msg": "password error"}, safe=False, status=403)
 
     @silk_profile(name="客服登出")
     def get(self, request):
