@@ -68,7 +68,7 @@ class Reg(View):
                 # 如果发送成功，保存发送消息
                 user_reg = User.objects.create(name=name, passwd=passwd, email=email, is_active=True)
                 print("数据保存成功！")
-                return JsonResponse({"state": "ok", "msg": "welcome!"})
+                return JsonResponse({"state": "ok", "msg": "welcome!"}, safe=False)
             else:
                 return JsonResponse({"state": "fail", "msg": "wrong or timeout"}, safe=False, status=403)
         else:
@@ -114,7 +114,7 @@ class Reg(View):
             user.save()
             request.session.clear()  # .flush()
             request.session.flush()  # .flush()
-            response = JsonResponse({"state": "ok", "msg": "user is not active"}, safe=False, status=403)
+            response = JsonResponse({"state": "ok", "msg": "user is not active"}, safe=False)
             response.delete_cookie("sessionid")
             return response
         except Exception as e:
@@ -155,7 +155,7 @@ class Log(View):
                 request.session['user_name'] = users[0].name
                 request.session['user_type'] = "user"
                 request.session.set_expiry(value=2 * 7 * 24 * 3600)  # session的过期时间为2周
-                response = JsonResponse({"state": "ok", "msg": "login success"})
+                response = JsonResponse({"state": "ok", "msg": "login success"}, safe=False)
                 response.set_cookie("is_login", "true", expires=2 * 7 * 24 * 3600)
                 response.set_cookie("user_type", "user", expires=2 * 7 * 24 * 3600)
                 if is_remember == "true":
@@ -356,7 +356,7 @@ class ServiceLog(View):
                 request.session['user_name'] = users[0].name
                 request.session['user_type'] = "service"
                 request.session.set_expiry(value=2 * 7 * 24 * 3600)  # session的过期时间为2周
-                response = JsonResponse({"state": "ok", "msg": "login success"})
+                response = JsonResponse({"state": "ok", "msg": "login success"}, safe=False)
                 response.set_cookie("service_is_login", "true", expires=2 * 7 * 24 * 3600)
                 response.set_cookie("service_user_type", "service", expires=2 * 7 * 24 * 3600)
                 if is_remember == "true":
