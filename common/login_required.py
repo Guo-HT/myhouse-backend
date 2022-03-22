@@ -9,6 +9,6 @@ def login_required(view_func):
             return view_func(requests, *view_args, **kwargs)
         else:
             # 未登录，调转到登录页
-            return JsonResponse({"state": "fail", "msg": "jump to login"}, safe=False)
+            return JsonResponse({"state": "fail", "msg": "jump to login"}, safe=False, status=403)
 
     return wrapper
