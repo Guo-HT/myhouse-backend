@@ -6,18 +6,17 @@ from django.views import View
 from django.contrib.auth.hashers import check_password
 from django.views.decorators.csrf import csrf_exempt
 from silk.profiling.profiler import silk_profile
+from haystack.views import SearchView
 from Essay.models import *
 from MyHouse import settings
 from common.login_required import *
 from common.get_ip import *
 
-essay_count_each_search_page = 6
 
-essay_link_each_recommend = 10
-
-comment_each_page = 2
-
-personal_info_count_per_page = 12
+essay_count_each_search_page = settings.essay_count_each_search_page
+essay_link_each_recommend = settings.essay_link_each_recommend
+comment_each_page = settings.comment_each_page
+personal_info_count_per_page = settings.personal_info_count_per_page
 
 
 # Create your views here.
@@ -111,6 +110,40 @@ class EssayDetail(View):
             return JsonResponse({"state": "ok", "msg": "is delete"}, safe=False)
         else:
             return JsonResponse({"state": "fail", "msg": "not found"}, safe=False, status=404)
+
+
+# 全文检索 重写类
+# class ContentSearch(SearchView):
+#     def create_response(self):
+#         from haystack.query import SearchQuerySet
+#         # context = super().get_context()
+#         keyword = self.request.GET.get("q", None)
+#         page = self.request.GET.get("page", 1)
+#         if not keyword:
+#             return JsonResponse({"state": "ok", "data":"no data"}, safe=False)
+#         else:
+#             # print(context)
+#             sqs = SearchQuerySet().filter(content_auto=self.request.GET.get('q', ''))
+#             print(sqs.all())
+#             # print(context["page"].object_list)
+#             # for i in context["page"].object_list:
+#             #     print(i)
+#             return JsonResponse({"state": "ok", "data": keyword}, safe=False)
+
+
+# 官方文档样例
+# def autocomplete(request):
+#     import json
+#     from haystack.query import SearchQuerySet
+#     sqs = SearchQuerySet().autocomplete(content_auto=request.GET.get('q', ''))[:1]
+#     suggestions = [result for result in sqs]
+#     print(suggestions)
+#     # Make sure you return a JSON object, not a bare list.
+#     # Otherwise, you could be vulnerable to an XSS attack.
+#     the_data = {
+#         'results': suggestions
+#     }
+#     return JsonResponse({"state":"ok", "data":the_data}, safe=False)
 
 
 # 接受富文本编辑器的图片

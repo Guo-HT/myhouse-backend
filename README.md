@@ -38,13 +38,17 @@
 15. 安装WebSocket支持：`pip install dwebsocket==0.5.12`
 16. 安装MQTT组件：`pip install paho-mqtt==1.6.1`
 17. 安装django数据库组件：`pip install MySQL-python`
-18. 安装其他：`pip install psutil platform requests getpass`
+18. 安装全文检索框架： `pip install django-haystack==3.1.1`
+19. 安装搜索引擎：`pip install whoosh==2.7.4`
+20. 安装分词库：`pip install jieba`
+21. 安装其他：`pip install psutil platform requests getpass`
 
 ## 项目启动
 1. 配置：进入`/MyHouse/settings.py`，更改数据库、缓存、MQTT服务器、后端IP地址、Silk数据存储目录等项目基本信息
 2. 更改gunicorn配置：进入`gunicorn.conf.py`，更改`accesslog`及`errorlog`路径
-3. 更改服务启动脚本：进入`start_myhouse.sh`，更改`celery_log_path`
-4. 运行服务启动脚本：`bash start_myhouse.sh`
+3. 建立whoosh索引：在项目目录下运行：`python manage.py rebuild_index`
+4. 更改服务启动脚本：进入`start_myhouse.sh`，更改`celery_log_path`
+5. 运行服务启动脚本：`bash start_myhouse.sh`
 
 ## Redis缓存说明
 - db  0: session

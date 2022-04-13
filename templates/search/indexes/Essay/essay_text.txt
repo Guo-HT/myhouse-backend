@@ -1,0 +1,2 @@
+{{ object.title }}  # 根据文章标题建立索引
+{{ object.content }}  # 根据文章内容建立索引

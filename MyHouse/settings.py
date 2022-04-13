@@ -15,6 +15,7 @@ import os
 # pymysql.version_info = (1, 3, 13, "final", 0)  # 解决mysql版本问题报错而添加的代码
 # pymysql.install_as_MySQLdb()
 import MySQLdb
+import secure
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -24,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'g)b=1h!@5tl0ar()@3#crta6@5zmz0*@q$59hwra&z_6+fd%vb'
+SECRET_KEY = secure.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'ckeditor',     # 后台,富文本
     'ckeditor_uploader',  # 后台,富文本上传
     'silk',  # 性能监测
+    'haystack',  # 全文检索框架
     # 自定义
     'UserManagement',  # 用户管理
     'Data',  # 数据管理
@@ -61,7 +63,7 @@ INSTALLED_APPS = [
 # 设置跨域可用
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = ('http://180.76.174.125:*', )
+CORS_ORIGIN_WHITELIST = (secure.BACKEND_URL+":*", )
 
 SESSION_COOKIE_SAMESITE = None  # response header set-cookie:samesite=lax  Default: 'Lax'
 CSRF_COOKIE_SAMESITE = None
@@ -141,18 +143,18 @@ WSGI_APPLICATION = 'MyHouse.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', #设置为mysql数据库
-        'NAME': 'MyHouse_cloud',  #mysql数据库名
-        'USER': 'root',  #mysql用户名
-        'PASSWORD': 'GuoHT990520#2',   #mysql密码
-        'HOST': '',  #留空默认为localhost
-        'PORT': '',  #留空默认为3306端口
+        'NAME': secure.mysql_conn['db_name'],  #mysql数据库名
+        'USER': secure.mysql_conn['user'],  #mysql用户名
+        'PASSWORD': secure.mysql_conn['password'],   #mysql密码
+        'HOST': secure.mysql_conn['host'],  #留空默认为localhost
+        'PORT': secure.mysql_conn['port'],  #留空默认为3306端口
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:guoht990520_2_redis@127.0.0.1:6379/0",
+        "LOCATION": f"redis://:{secure.redis_conn['password']}@{secure.redis_conn['host']}:{secure.redis_conn['port']}/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -161,6 +163,22 @@ CACHES = {
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_REDIS_ALIAS = "default"
+
+REDIS_HOST = secure.redis_conn['host']
+REDIS_PORT = secure.redis_conn['port']
+REDIS_PASSWORD = secure.redis_conn['password']
+
+HAYSTACK_CONNECTIONS = {
+    "default":{
+        # "ENGINE": "haystack.backends.whoosh_backend.WhooshEngine",  # 使用whoosh引擎
+        "ENGINE": "Essay.whoosh_cn_backend.WhooshEngine",  # 使用whoosh引擎
+        "PATH": os.path.join(BASE_DIR, "whoosh_index"),  # 索引文件路径
+    }
+}
+#设置分页显示的数据量
+HAYSTACK_SEARCH_RESULTS_PER_PAGE = secure.essay_count['essay_count_each_search_page']
+# 添加、修改、删除数据时，自动生成索引
+HAYSTACK_SINGAL_PROCESSOR = "haystack.signals.RealtimeSignalProcessor"
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -204,7 +222,7 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/upload_files/'  # 你的media url 在Url显示并没什么关系
 
-MEDIA_ROOT = r"/root/project/var/UpLoadFiles/"
+MEDIA_ROOT = secure.MEDIA_ROOT
 
 # ckeditor配置
 CKEDITOR_JQUERY_URL = 'https://cdn.bootcdn.net/ajax/libs/jquery/2.1.4/jquery.min.js'
@@ -226,7 +244,7 @@ SILKY_PYTHON_PROFILER = True
 SILKY_PYTHON_PROFILER_BINARY = True
 # .prof文件保存路径（最好不要像我这样设置在项目目录中）
 # 如果没有本设置，prof文件将默认保存在MEDIA_ROOT里
-SILKY_PYTHON_PROFILER_RESULT_PATH = '/root/project/var/SilkProf'
+SILKY_PYTHON_PROFILER_RESULT_PATH = secure.SILKY_PYTHON_PROFILER_RESULT_PATH
 # 认证需要自己写
 SILKY_AUTHENTICATION = True  # User must login
 SILKY_AUTHORISATION = True  # User must have permissions  # from django.contrib.auth.models import User as admin
@@ -234,10 +252,10 @@ SILKY_PERMISSIONS = lambda user: user.is_superuser
 
 # 邮件配置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.qq.com'
+EMAIL_HOST = secure.email_setting["EMAIL_HOST"]
 EMAIL_PORT = 25
-EMAIL_HOST_USER = '1622761893@qq.com'
-EMAIL_HOST_PASSWORD = 'pwmauvnhdcpkeghj'
+EMAIL_HOST_USER = secure.email_setting["EMAIL_HOST_USER"]
+EMAIL_HOST_PASSWORD = secure.email_setting["EMAIL_HOST_PASSWORD"]
 EMAIL_USE_TLS = True  # 这里必须是 True，否则发送不成功
 
 # 头像大小限制
@@ -245,10 +263,19 @@ PHOTO_SIZE = 3*1024*1024
 PHOTO_TYPE = ["png", "jpg", "gif"]
 
 # 后端域
-BACKEND_SITE = "http://180.76.174.125:8003"
+BACKEND_SITE = f"{secure.BACKEND_URL}:{secure.BACKEND_PORT}"
 
 # MQTT服务器相关
-MQTT_SERVER_HOST = "180.76.174.125"
-MQTT_SERVER_PORT = 1883
-MQTT_USERNAME = "client"
-MQTT_PASSWORD = "GuoHT990520#2"
+MQTT_SERVER_HOST = secure.mqtt_conn["MQTT_SERVER_HOST"]
+MQTT_SERVER_PORT = secure.mqtt_conn["MQTT_SERVER_PORT"]
+MQTT_USERNAME = secure.mqtt_conn["MQTT_USERNAME"]
+MQTT_PASSWORD = secure.mqtt_conn["MQTT_PASSWORD"]
+
+# 文章列表，一页几个
+essay_count_each_search_page = secure.essay_count['essay_count_each_search_page']
+# 文章推荐，一栏几个
+essay_link_each_recommend = secure.essay_count['essay_link_each_recommend']
+# 文章评论，一页几个
+comment_each_page = secure.essay_count['comment_each_page']
+# 个人主页，历史记录，一页几个
+personal_info_count_per_page = secure.essay_count['personal_info_count_per_page']

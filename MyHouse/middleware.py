@@ -4,11 +4,12 @@ from Data.models import BanIp as ban_ip_model
 import redis
 import re
 import datetime
+from MyHouse import settings
 
 
 # 建立redis连接池
-redis_pool_ban_words = redis.ConnectionPool(host="127.0.0.1", port="6379", db=3, password="guoht990520_2_redis", decode_responses=False)
-redis_pool_ban_ip = redis.ConnectionPool(host="127.0.0.1", port="6379", db=2, password="guoht990520_2_redis", decode_responses=False)
+redis_pool_ban_words = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=3, password=settings.REDIS_PASSWORD, decode_responses=False)
+redis_pool_ban_ip = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=2, password=settings.REDIS_PASSWORD, decode_responses=False)
 
 class BanIp(MiddlewareMixin):
     def process_request(self, request):

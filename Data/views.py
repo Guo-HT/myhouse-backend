@@ -107,7 +107,11 @@ def get_data(request):
     user_id = request.session["user_id"]
     machine_type = request.GET.get("type")
     machine_id = request.GET.get("id")
-
+    try:
+        target_machine = Machine.objects.get(id=machine_id)
+        assert machine_type == target_machine.work_type
+    except:
+        return JsonResponse({"state": "fail", "msg":"not match"}, safe=False, status=500)
     recent_data = MachineData.objects.filter(machine_id=machine_id, machine__work_type=machine_type).order_by(
         "-upload_time")
     if len(recent_data) == 0:
@@ -177,8 +181,8 @@ def mqtt_ctrl(request):
 # 以下是即时通信
 online_user = set()
 online_service = set()
-redis_pool_from_user = redis.ConnectionPool(host="127.0.0.1", port="6379", db=4, password="guoht990520_2_redis", decode_responses=False)
-redis_pool_from_service = redis.ConnectionPool(host="127.0.0.1", port="6379", db=5, password="guoht990520_2_redis", decode_responses=False)
+redis_pool_from_user = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=4, password=settings.REDIS_PASSWORD, decode_responses=False)
+redis_pool_from_service = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=5, password=settings.REDIS_PASSWORD, decode_responses=False)
 
 
 @silk_profile(name="即时通信发送文件")

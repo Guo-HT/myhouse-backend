@@ -16,8 +16,8 @@ import re
 import redis
 
 
-redis_pool_register = redis.ConnectionPool(host="127.0.0.1", port="6379", db=6, password="guoht990520_2_redis", decode_responses=True)
-redis_pool_change = redis.ConnectionPool(host="127.0.0.1", port="6379", db=7, password="guoht990520_2_redis", decode_responses=True)
+redis_pool_register = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=6, password=settings.REDIS_PASSWORD, decode_responses=True)
+redis_pool_change = redis.ConnectionPool(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=7, password=settings.REDIS_PASSWORD, decode_responses=True)
 
 
 # Create your views here.
