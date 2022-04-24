@@ -9,7 +9,7 @@ class Machine(models.Model):
         ("2", "dht11"),
     )
     mac_addr = models.CharField(max_length=20, unique=True, verbose_name="MAC地址")
-    user_belong = models.ForeignKey("UserManagement.User", null=True, blank=True, on_delete=models.CASCADE, verbose_name="从属用户") #, db_contraint=False
+    user_belong = models.ForeignKey("UserManagement.User", null=True, blank=True, on_delete=models.CASCADE, db_constraint=False, verbose_name="从属用户") # 逻辑外键
     is_online = models.BooleanField(default=False, verbose_name="是否在线")
     work_type = models.CharField(max_length=10, default="", choices=WORK_TYPE, verbose_name="设备类型")
     machine_name = models.CharField(max_length=20, default="我的设备", verbose_name="设备名称")
@@ -24,7 +24,7 @@ class Machine(models.Model):
 
 
 class MachineData(models.Model):
-    machine = models.ForeignKey("Machine", blank=False, null=False, on_delete=models.CASCADE, verbose_name="设备") #, db_contraint=False
+    machine = models.ForeignKey("Machine", blank=False, null=False, on_delete=models.CASCADE, db_constraint=False, verbose_name="设备") # 逻辑外键
     data = models.CharField(max_length=200, verbose_name="设备数据")
     upload_time = models.CharField(max_length=100, verbose_name="设备采集时间")
 
@@ -38,7 +38,7 @@ class MachineData(models.Model):
 
 
 class CommandHistory(models.Model):
-    machine = models.ForeignKey("Machine", blank=False, null=False, on_delete=models.CASCADE, verbose_name="设备") #, db_contraint=False
+    machine = models.ForeignKey("Machine", blank=False, null=False, on_delete=models.CASCADE, db_constraint=False, verbose_name="设备") # 逻辑外键
     time = models.DateTimeField(auto_now_add=True, verbose_name="发送时间")
     command = models.CharField(max_length=20, default="", verbose_name="指令内容")
 
@@ -53,8 +53,8 @@ class CommandHistory(models.Model):
 
 class ChatHistory(models.Model):
     time = models.CharField(max_length=32, verbose_name="发送时间")
-    user = models.ForeignKey("UserManagement.User", default="", on_delete=models.CASCADE, verbose_name="用户") #, db_contraint=False
-    service = models.ForeignKey("UserManagement.Service", default="", on_delete=models.CASCADE, verbose_name="客服") # , db_contraint=False
+    user = models.ForeignKey("UserManagement.User", default="", on_delete=models.CASCADE, db_constraint=False, verbose_name="用户") # 逻辑外键
+    service = models.ForeignKey("UserManagement.Service", default="", on_delete=models.CASCADE, db_constraint=False, verbose_name="客服") # 逻辑外键
     text = models.TextField(max_length=255, verbose_name="内容")
     content_type = models.CharField(max_length=10, verbose_name="类型")
     from_type = models.TextField(max_length=10, default="", verbose_name="发送方类型")
@@ -72,8 +72,8 @@ class ChatHistory(models.Model):
 
 
 class MachineLink(models.Model):
-    upper = models.ForeignKey("Machine", on_delete=models.CASCADE, related_name="upper", verbose_name="上位机") # , db_contraint=False
-    lower = models.ForeignKey("Machine", on_delete=models.CASCADE, related_name="lower", verbose_name="下位机") # , db_contraint=False
+    upper = models.ForeignKey("Machine", on_delete=models.CASCADE, related_name="upper", db_constraint=False, verbose_name="上位机") # 逻辑外键
+    lower = models.ForeignKey("Machine", on_delete=models.CASCADE, related_name="lower", db_constraint=False, verbose_name="下位机") # 逻辑外键
     data_item = models.TextField(max_length=24, default="", verbose_name="数据项")
     condition = models.CharField(max_length=10, default="", verbose_name="触发条件")  # eq\lt\gt
     condition_num = models.IntegerField(default=0, verbose_name="触发阈值")

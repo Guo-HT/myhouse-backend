@@ -50,10 +50,10 @@ class Reg(View):
         email = request.POST.get("email")
         verify = request.POST.get("verify")
 
-        name_result = re.match(r"^\w+$", name)
+        name_result = result = re.match(r"^(([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4}))|(\w{8,})$", name)
         passwd_result = re.match(r"^(?![a-zA-Z]+$)(?![A-Z0-9]+$)(?![A-Z._~!@#$^&*]+$)(?![a-z0-9]+$)(?![a-z._~!@#$^&*]+$)(?![0-9._~!@#$^&*]+$)[a-zA-Z0-9._~!@#$^&*]{8,}$", passwd)
         email_result = re.match(r"^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$", email)
-        if  (name_result is None or len(name) <= 8 or passwd_result is None or email_result is None):
+        if  (name_result is None or passwd_result is None or email_result is None):
             return JsonResponse({"state":"fail", "msg":"format error"}, safe=False, status=403)
 
         existed_user = User.objects.filter(Q(name=name) | Q(email=email))  # 用户名、邮箱 是否注册

@@ -29,9 +29,12 @@ class EssayDetail(View):
     @method_decorator(login_required)  # 类视图装饰器
     def post(self, request):
         """上传文章"""
+        import re
         from common import getLoginInfo
+        from lxml.html.clean import clean_html
         title = request.POST.get("title")
         content = request.POST.get("content")
+        content = clean_html(content)
         login_info = getLoginInfo.get_login_info(request)
         user_id = login_info["user_id"]
         user = User.objects.get(id=user_id)
