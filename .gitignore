@@ -3,3 +3,5 @@ nohup.out
 *__pycache__
 *__pycache__/*
 gunicorn.pid
+cut_log.sh
+uwsgi_.ini
