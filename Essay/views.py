@@ -235,15 +235,19 @@ def get_list(request):
         hot_five_essay_id = [i[0] for i in hot_five]
         data_list = []
         for each in hot_five_essay_id:
-            each = Essay.objects.get(id=each, is_checked=True, is_delete=False)
-            each_data = dict()
-            each_data["id"] = each.id
-            each_data["title"] = each.title
-            each_data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
-            each_data["user"] = each.user.name
-            each_data["create_time"] = each.create_time.strftime('%Y-%m-%d %H:%M:%S')
-            each_data["watch_num"] = each.watch_num
-            data_list.append(each_data)
+            try:
+                each = Essay.objects.get(id=each, is_checked=True, is_delete=False)
+            except Exception as e:
+                pass
+            else:
+                each_data = dict()
+                each_data["id"] = each.id
+                each_data["title"] = each.title
+                each_data["content"] = escape(reg.sub('', each.content).replace('\n', '').replace(' ', '')[0:50])
+                each_data["user"] = each.user.name
+                each_data["create_time"] = each.create_time.strftime('%Y-%m-%d %H:%M:%S')
+                each_data["watch_num"] = each.watch_num
+                data_list.append(each_data)
         send_data = {"state": "ok", "msg": data_list}
         return JsonResponse(send_data, safe=False)
     elif list_for == "details":
